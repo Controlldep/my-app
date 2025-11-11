@@ -5,13 +5,23 @@ import { Model } from 'mongoose';
 
 @Injectable()
 export class UserRepository {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
-
-  async findById(id: string): Promise<UserDocument | null> {
-    return this.userModel.findById(id);
+  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {
   }
 
-  async save(user: UserDocument): Promise<UserDocument> {
+  async findById(id: string): Promise<UserDocument | null> {
+    return this.userModel.findOne({
+      _id: id,
+      deletedAt: null,
+    });
+  }
+
+  async save(dto: UserDocument): Promise<UserDocument> {
+    const user: UserDocument = new this.userModel(dto);
     return user.save();
+  }
+
+  async deleteUser(id: string) {
+    const deleteUser = await this.userModel.deleteOne({ _id: id });
+    return deleteUser.deletedCount === 1;
   }
 }
