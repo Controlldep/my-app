@@ -5,8 +5,7 @@ import { Model } from 'mongoose';
 
 @Injectable()
 export class UserRepository {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {
-  }
+  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
 
   async findById(id: string): Promise<UserDocument | null> {
     return this.userModel.findOne({

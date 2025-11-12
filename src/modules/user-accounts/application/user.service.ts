@@ -9,7 +9,7 @@ import { UserQueryRepository } from '../infrastructure/user.query-repository';
 export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
-    private readonly userQueryRepository: UserQueryRepository
+    private readonly userQueryRepository: UserQueryRepository,
   ) {}
 
   async createUser(dto: UsersInputDto): Promise<UserDocument> {
@@ -27,6 +27,8 @@ export class UserService {
   async findAllUsers() {
     return await this.userQueryRepository.getUsers();
   }
+
+  //TODO статус код в сервисе
 
   async deleteUser(id: string) {
     const user = await this.userRepository.findById(id);
