@@ -1,15 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { BlogInputDto } from '../api/dto/blog.input-dto';
 import { Blog, BlogDocument } from '../domain/blog.entity';
-import { PostInputDto } from '../../posts/api/dto/post.input-dto';
+import { PostInputDto } from '../../posts/api/dto/input-dto/post.input-dto';
 import { BlogInputUpdateDto } from '../api/dto/blog.input-update-dto';
 import { BlogRepository } from '../infrastructure/blog.repository';
+import { Post, PostDocument } from '../../posts/domain/post.entity';
+import { PostRepository } from '../../posts/infrastructure/post.repository';
 
 @Injectable()
 export class BlogService {
   constructor(
     private readonly blogRepository: BlogRepository,
-    // private readonly postRepository: PostRepository
+    private readonly postRepository: PostRepository
   ) {}
 
   async createBlog(dto: BlogInputDto) {
@@ -17,18 +19,22 @@ export class BlogService {
     return await this.blogRepository.save(blog);
   }
 
-  // async createPostByBlog(blogId: string, dto: PostInputDto) {
-  //   const findBlog: BlogDocument | null = await this.blogRepository.findBlogById(blogId);
-  //   if (!findBlog) throw new NotFoundException('Blog not found');
-  //
-  //   const post = Post.createInstance({
-  //     ...dto,
-  //     blogId,
-  //     findBlog.name
-  //   });
-  //
-  //   return await this.postRepository.save(post);
-  // }
+  async createPostByBlog(blogId: string, dto: PostInputDto) {
+    const findBlog: BlogDocument | null = await this.blogRepository.findBlogById(blogId);
+    if (!findBlog) throw new NotFoundException('Blog not found');
+
+    const post: PostDocument = Post.createInstance({
+      ...dto,
+      blogId: blogId,
+      blogName: findBlog.name,
+    });
+
+    return await this.postRepository.save(post);
+  }
+
+  async findBlogById(id: string) {
+    return await this.blogRepository.findBlogById(id);
+  }
 
   async updateBlog(id: string, dto: BlogInputUpdateDto) {
     return await this.blogRepository.updateBlog(id, dto);

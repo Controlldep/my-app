@@ -8,13 +8,14 @@ import { BlogInputUpdateDto } from '../api/dto/blog.input-update-dto';
 export class BlogRepository {
   constructor(@InjectModel(Blog.name) private blogModel: Model<BlogDocument>) {}
 
-  async findBlogById(id: string) {
+  async findBlogById(id: string): Promise<BlogDocument | null> {
     return await this.blogModel.findById(id);
   }
 
-  async save(dto: BlogDocument): Promise<BlogDocument> {
+  async save(dto: BlogDocument): Promise<string> {
     const blog: BlogDocument = new this.blogModel(dto);
-    return blog.save();
+    const saveBlog: BlogDocument = await blog.save();
+    return saveBlog._id.toString();
   }
 
   async updateBlog(id: string, dto: BlogInputUpdateDto) {
@@ -24,8 +25,8 @@ export class BlogRepository {
   }
 
   async deleteBlog(id: string) {
-    const deleteUser = await this.blogModel.findOneAndDelete({ _id: id });
-    if (!deleteUser)
+    const deleteBlog = await this.blogModel.findOneAndDelete({ _id: id });
+    if (!deleteBlog)
       throw new HttpException('Blog not found', HttpStatus.NOT_FOUND);
   }
 }
