@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model } from 'mongoose';
-import { BlogInputDto } from '../api/dto/blog.input-dto';
+import { BlogInputDto } from '../api/dto/input-dto/blog.input-dto';
 
 @Schema({ timestamps: true })
 export class Blog {
@@ -13,7 +13,7 @@ export class Blog {
   @Prop({ type: String, required: true })
   websiteUrl: string;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: Boolean, required: true })
   isMembership: boolean;
 
   createdAt: Date;
@@ -27,7 +27,7 @@ export class Blog {
     blog.name = dto.name;
     blog.description = dto.description;
     blog.websiteUrl = dto.websiteUrl;
-    blog.isMembership = true;
+    blog.isMembership = false;
 
     return blog as BlogDocument;
   }

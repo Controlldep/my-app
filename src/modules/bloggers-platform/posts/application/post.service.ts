@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { BlogRepository } from '../../blogs/infrastructure/blog.repository';
 import { PostInputDto } from '../api/dto/input-dto/post.input-dto';
 import { BlogDocument } from '../../blogs/domain/blog.entity';
 import { UpdatePostInputDto } from '../api/dto/input-dto/update-post.input-dto';
 import { PostRepository } from '../infrastructure/post.repository';
 import { Post, PostDocument } from '../domain/post.entity';
+import { Types } from 'mongoose';
 
 @Injectable()
 export class PostService {
@@ -30,6 +31,13 @@ export class PostService {
   }
 
   async updatePost(id: string, dto: UpdatePostInputDto) {
+    if(dto.blogId) {
+      if (!Types.ObjectId.isValid(dto.blogId)) {
+        throw new BadRequestException('Invalid ID format');
+      }
+      const findBlogByDtoId = await this.blogRepository.findBlogById(dto.blogId)
+      if(!findBlogByDtoId) throw new HttpException('Blog not found', HttpStatus.NOT_FOUND);
+    }
     return await this.postRepository.updatePost(id, dto);
   }
 

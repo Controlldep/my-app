@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Blog, BlogDocument } from '../domain/blog.entity';
-import { BlogInputUpdateDto } from '../api/dto/blog.input-update-dto';
+import { BlogInputUpdateDto } from '../api/dto/input-dto/blog.input-update-dto';
 
 @Injectable()
 export class BlogRepository {

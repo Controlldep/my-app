@@ -2,20 +2,20 @@ import {
   Body,
   Controller,
   Delete,
-  Get, NotFoundException,
+  Get, HttpCode, HttpStatus, NotFoundException,
   Param,
   Post,
   Put,
   Query,
 } from '@nestjs/common';
-import { BlogInputDto } from './dto/blog.input-dto';
+import { BlogInputDto } from './dto/input-dto/blog.input-dto';
 import { PostInputDto } from '../../posts/api/dto/input-dto/post.input-dto';
-import { BlogInputUpdateDto } from './dto/blog.input-update-dto';
+import { BlogInputUpdateDto } from './dto/input-dto/blog.input-update-dto';
 import { BlogService } from '../application/blog.service';
 import { BlogsQueryRepository } from '../infrastructure/blog.query-repository';
-import { BlogViewDto } from './dto/blog.view-dto';
+import { BlogViewDto } from './dto/view-dto/blog.view-dto';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
-import { GetBlogsQueryInputDto } from './dto/get-blogs-query-params.input-dto';
+import { GetBlogsQueryInputDto } from './dto/input-dto/get-blogs-query-params.input-dto';
 import { PostQueryRepository } from '../../posts/infrastructure/post.query-repository';
 import { GetPostQueryInputDto } from '../../posts/api/dto/input-dto/get-posts-query-params.input-dto';
 import { PostViewDto } from '../../posts/api/dto/view-dto/post.view-dto';
@@ -60,10 +60,12 @@ export class BlogControllers {
 
   @Post(':id/posts')
   async createPostByBlog(@Param('id') blogId: string, @Body() dto: PostInputDto) {
-    return await this.blogService.createPostByBlog(blogId, dto);
+    const cretePostByBlogAndReturnId = await this.blogService.createPostByBlog(blogId, dto);
+    return this.postQueryRepository.getPostById(cretePostByBlogAndReturnId);
   }
 
   @Put(':id')
+  @HttpCode(204)
   async updateBlog(@Param('id') id: string, @Body() dto: BlogInputUpdateDto) {
     return await this.blogService.updateBlog(id, dto);
   }
@@ -71,6 +73,7 @@ export class BlogControllers {
   //TODO при удаление блога должны удаляться все посты
 
   @Delete(':id')
+  @HttpCode(204)
   async deleteBlog(@Param('id') id: string) {
     return await this.blogService.deleteBlog(id);
   }

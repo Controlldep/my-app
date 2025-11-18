@@ -12,7 +12,7 @@ export class UserService {
     private readonly userQueryRepository: UserQueryRepository,
   ) {}
 
-  async createUser(dto: UsersInputDto): Promise<UserDocument> {
+  async createUser(dto: UsersInputDto): Promise<string> {
     const hashedPassword: string = await PasswordHelper.hashPassword(
       dto.password,
     );
@@ -22,10 +22,6 @@ export class UserService {
       password: hashedPassword,
     });
     return await this.userRepository.save(user);
-  }
-
-  async findAllUsers() {
-    return await this.userQueryRepository.getUsers();
   }
 
   //TODO статус код в сервисе

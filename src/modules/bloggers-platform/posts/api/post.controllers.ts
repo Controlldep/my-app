@@ -2,7 +2,7 @@ import {
   Body,
   Controller,
   Delete,
-  Get, HttpException, HttpStatus, NotFoundException,
+  Get, HttpCode, HttpException, HttpStatus, NotFoundException,
   Param,
   Post,
   Put,
@@ -12,7 +12,7 @@ import { UpdatePostInputDto } from './dto/input-dto/update-post.input-dto';
 import { PostInputDto } from './dto/input-dto/post.input-dto';
 import { GetCommentsQueryInputDto } from './dto/input-dto/get-comments-query=params.input-dto';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
-import { BlogViewDto } from '../../blogs/api/dto/blog.view-dto';
+import { BlogViewDto } from '../../blogs/api/dto/view-dto/blog.view-dto';
 import { PostService } from '../application/post.service';
 import { PostQueryRepository } from '../infrastructure/post.query-repository';
 import { PostDocument } from '../domain/post.entity';
@@ -58,11 +58,13 @@ export class PostControllers {
   }
 
   @Put(':id')
+  @HttpCode(204)
   async updatePost(@Param('id') id: string, @Body() dto: UpdatePostInputDto) {
     return await this.postService.updatePost(id, dto);
   }
 
   @Delete(':id')
+  @HttpCode(204)
   async deletePost(@Param('id') id: string) {
     return await this.postService.deletePost(id);
   }

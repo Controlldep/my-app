@@ -14,9 +14,11 @@ export class UserRepository {
     });
   }
 
-  async save(dto: UserDocument): Promise<UserDocument> {
+  async save(dto: UserDocument): Promise<string> {
     const user: UserDocument = new this.userModel(dto);
-    return user.save();
+    const saveUSer: UserDocument = await user.save();
+
+    return saveUSer._id.toString();
   }
 
   async deleteUser(id: string) {

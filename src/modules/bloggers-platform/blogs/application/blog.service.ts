@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { BlogInputDto } from '../api/dto/blog.input-dto';
+import { BlogInputDto } from '../api/dto/input-dto/blog.input-dto';
 import { Blog, BlogDocument } from '../domain/blog.entity';
 import { PostInputDto } from '../../posts/api/dto/input-dto/post.input-dto';
-import { BlogInputUpdateDto } from '../api/dto/blog.input-update-dto';
+import { BlogInputUpdateDto } from '../api/dto/input-dto/blog.input-update-dto';
 import { BlogRepository } from '../infrastructure/blog.repository';
 import { Post, PostDocument } from '../../posts/domain/post.entity';
 import { PostRepository } from '../../posts/infrastructure/post.repository';
