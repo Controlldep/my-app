@@ -1,0 +1,1 @@
+export type UserFilter = { email: string } | { login: string };
