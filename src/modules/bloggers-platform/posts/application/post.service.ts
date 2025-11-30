@@ -1,4 +1,4 @@
-import { BadRequestException, HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { BlogRepository } from '../../blogs/infrastructure/blog.repository';
 import { PostInputDto } from '../api/dto/input-dto/post.input-dto';
 import { BlogDocument } from '../../blogs/domain/blog.entity';
@@ -6,6 +6,7 @@ import { UpdatePostInputDto } from '../api/dto/input-dto/update-post.input-dto';
 import { PostRepository } from '../infrastructure/post.repository';
 import { Post, PostDocument } from '../domain/post.entity';
 import { Types } from 'mongoose';
+import { CustomHttpException, DomainExceptionCode } from '../../../../core/exceptions/domain.exception';
 
 @Injectable()
 export class PostService {
@@ -16,7 +17,7 @@ export class PostService {
 
   async createPost(dto: PostInputDto) {
     const findBlog: BlogDocument | null = await this.blogRepository.findBlogById(dto.blogId);
-    if (!findBlog) throw new NotFoundException('Blog not found');
+    if (!findBlog) throw new CustomHttpException(DomainExceptionCode.NOT_FOUND);
 
     const post: PostDocument = Post.createInstance({
       ...dto,
@@ -31,12 +32,12 @@ export class PostService {
   }
 
   async updatePost(id: string, dto: UpdatePostInputDto) {
-    if(dto.blogId) {
+    if (dto.blogId) {
       if (!Types.ObjectId.isValid(dto.blogId)) {
-        throw new BadRequestException('Invalid ID format');
+        throw new CustomHttpException(DomainExceptionCode.BAD_REQUEST);
       }
-      const findBlogByDtoId = await this.blogRepository.findBlogById(dto.blogId)
-      if(!findBlogByDtoId) throw new HttpException('Blog not found', HttpStatus.NOT_FOUND);
+      const findBlogByDtoId = await this.blogRepository.findBlogById(dto.blogId);
+      if (!findBlogByDtoId) throw new CustomHttpException(DomainExceptionCode.NOT_FOUND);
     }
     return await this.postRepository.updatePost(id, dto);
   }

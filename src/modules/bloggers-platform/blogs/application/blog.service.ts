@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { BlogInputDto } from '../api/dto/input-dto/blog.input-dto';
 import { Blog, BlogDocument } from '../domain/blog.entity';
 import { PostInputDto } from '../../posts/api/dto/input-dto/post.input-dto';
@@ -6,12 +6,13 @@ import { BlogInputUpdateDto } from '../api/dto/input-dto/blog.input-update-dto';
 import { BlogRepository } from '../infrastructure/blog.repository';
 import { Post, PostDocument } from '../../posts/domain/post.entity';
 import { PostRepository } from '../../posts/infrastructure/post.repository';
+import { CustomHttpException, DomainExceptionCode } from '../../../../core/exceptions/domain.exception';
 
 @Injectable()
 export class BlogService {
   constructor(
     private readonly blogRepository: BlogRepository,
-    private readonly postRepository: PostRepository
+    private readonly postRepository: PostRepository,
   ) {}
 
   async createBlog(dto: BlogInputDto) {
@@ -21,7 +22,7 @@ export class BlogService {
 
   async createPostByBlog(blogId: string, dto: PostInputDto) {
     const findBlog: BlogDocument | null = await this.blogRepository.findBlogById(blogId);
-    if (!findBlog) throw new NotFoundException('Blog not found');
+    if (!findBlog) throw new CustomHttpException(DomainExceptionCode.NOT_FOUND);
 
     const post: PostDocument = Post.createInstance({
       ...dto,

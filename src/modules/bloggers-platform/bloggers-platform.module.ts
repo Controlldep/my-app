@@ -18,9 +18,7 @@ import { Post, PostSchema } from './posts/domain/post.entity';
       { name: Post.name, schema: PostSchema },
     ]),
   ],
-  providers: [
-    BlogRepository, BlogService, BlogsQueryRepository,
-    PostService, PostRepository, PostQueryRepository],
+  providers: [BlogRepository, BlogService, BlogsQueryRepository, PostService, PostRepository, PostQueryRepository],
   controllers: [BlogControllers, PostControllers],
 })
 export class BloggersPlatformModule {}

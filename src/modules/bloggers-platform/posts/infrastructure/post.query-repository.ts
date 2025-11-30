@@ -17,17 +17,15 @@ export class PostQueryRepository {
     return PostViewDto.mapToView(findPost);
   }
 
-  async getAllPosts(
-    query: GetPostQueryInputDto,
-    blogId?: string,
-  ): Promise<PaginatedViewDto<PostViewDto[]>> {
+  async getAllPosts(query: GetPostQueryInputDto, blogId?: string): Promise<PaginatedViewDto<PostViewDto[]>> {
     const filter: FilterQuery<Post> = {};
 
     if (blogId) {
       filter.blogId = blogId;
     }
 
-    const posts = await this.postModel.find(filter)
+    const posts = await this.postModel
+      .find(filter)
       .sort({ [query.sortBy]: query.sortDirection })
       .skip(query.calculateSkip())
       .limit(query.pageSize);

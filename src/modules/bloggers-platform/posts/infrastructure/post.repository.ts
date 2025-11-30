@@ -1,8 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UpdatePostInputDto } from '../api/dto/input-dto/update-post.input-dto';
 import { Post, PostDocument } from '../domain/post.entity';
+import { CustomHttpException, DomainExceptionCode } from '../../../../core/exceptions/domain.exception';
 
 @Injectable()
 export class PostRepository {
@@ -20,13 +21,11 @@ export class PostRepository {
 
   async updatePost(id: string, dto: UpdatePostInputDto) {
     const result = await this.postModel.findByIdAndUpdate(id, dto);
-    if (!result)
-      throw new HttpException('Blog not found', HttpStatus.NOT_FOUND);
+    if (!result) throw new CustomHttpException(DomainExceptionCode.NOT_FOUND);
   }
 
   async deletePost(id: string) {
     const deletePost = await this.postModel.findOneAndDelete({ _id: id });
-    if (!deletePost)
-      throw new HttpException('Post not found', HttpStatus.NOT_FOUND);
+    if (!deletePost) throw new CustomHttpException(DomainExceptionCode.NOT_FOUND);
   }
 }

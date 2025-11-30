@@ -1,3 +1,4 @@
+
 export class PostDto {
   title: string;
   shortDescription: string;

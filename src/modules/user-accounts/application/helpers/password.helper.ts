@@ -5,10 +5,7 @@ export class PasswordHelper {
     return await bcrypt.hash(password, 10);
   }
 
-  static async comparePassword(
-    password: string,
-    hashedPassword: string,
-  ): Promise<boolean> {
+  static async comparePassword(password: string, hashedPassword: string): Promise<boolean> {
     return await bcrypt.compare(password, hashedPassword);
   }
 }

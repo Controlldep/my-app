@@ -38,4 +38,3 @@ export const BlogSchema = SchemaFactory.createForClass(Blog);
 BlogSchema.loadClass(Blog);
 
 export type BlogDocument = HydratedDocument<Blog>;
-

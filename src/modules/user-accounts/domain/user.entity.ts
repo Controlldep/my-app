@@ -13,8 +13,14 @@ export class User {
   @Prop({ type: String, required: true })
   email: string;
 
-  @Prop({ type: Boolean, required: true, default: false })
-  isEmailConfirmed: boolean;
+  @Prop({ type: Boolean, default: false })
+  isConfirmed: boolean;
+
+  @Prop({ type: String, default: null })
+  confirmationCode: string | null;
+
+  @Prop({ type: Date, default: null })
+  expirationDate: Date | null;
 
   createdAt: Date;
   updatedAt: Date;
@@ -27,7 +33,9 @@ export class User {
     user.email = dto.email;
     user.passwordHash = dto.password;
     user.login = dto.login;
-    user.isEmailConfirmed = false;
+    user.isConfirmed = false;
+    user.confirmationCode = dto.confirmationCode || null;
+    user.expirationDate = dto.expirationDate || null;
 
     return user as UserDocument;
   }

@@ -18,10 +18,7 @@ export class BlogsQueryRepository {
     return BlogViewDto.mapToView(blog);
   }
 
-
-  async getAllBlogs(
-    query: GetBlogsQueryInputDto,
-  ): Promise<PaginatedViewDto<BlogViewDto[]>> {
+  async getAllBlogs(query: GetBlogsQueryInputDto): Promise<PaginatedViewDto<BlogViewDto[]>> {
     const filter: FilterQuery<Blog> = {};
 
     if (query.searchNameTerm) {

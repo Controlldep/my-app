@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get, HttpCode, HttpStatus, NotFoundException,
-  Param,
-  Post,
-  Put,
-  Query,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { BlogInputDto } from './dto/input-dto/blog.input-dto';
 import { PostInputDto } from '../../posts/api/dto/input-dto/post.input-dto';
 import { BlogInputUpdateDto } from './dto/input-dto/blog.input-update-dto';
@@ -20,6 +11,8 @@ import { PostQueryRepository } from '../../posts/infrastructure/post.query-repos
 import { GetPostQueryInputDto } from '../../posts/api/dto/input-dto/get-posts-query-params.input-dto';
 import { PostViewDto } from '../../posts/api/dto/view-dto/post.view-dto';
 import { BlogDocument } from '../domain/blog.entity';
+import { CustomHttpException, DomainExceptionCode } from '../../../../core/exceptions/domain.exception';
+import { BasicAuthGuard } from '../../../user-accounts/guards/basic/basic-auth.guard';
 
 @Controller('blogs')
 export class BlogControllers {
@@ -30,19 +23,14 @@ export class BlogControllers {
   ) {}
 
   @Get()
-  async getAllBlogs(
-    @Query() query: GetBlogsQueryInputDto,
-  ): Promise<PaginatedViewDto<BlogViewDto[]>> {
+  async getAllBlogs(@Query() query: GetBlogsQueryInputDto): Promise<PaginatedViewDto<BlogViewDto[]>> {
     return this.blogQueryRepository.getAllBlogs(query);
   }
 
   @Get(':id/posts')
-  async getAllPostsByBlog(
-    @Query() query: GetPostQueryInputDto,
-    @Param('id') id: string,
-  ): Promise<PaginatedViewDto<PostViewDto[]>> {
+  async getAllPostsByBlog(@Query() query: GetPostQueryInputDto, @Param('id') id: string): Promise<PaginatedViewDto<PostViewDto[]>> {
     const findBlog: BlogDocument | null = await this.blogService.findBlogById(id);
-    if(!findBlog) throw new NotFoundException('Blog not found');
+    if (!findBlog) throw new CustomHttpException(DomainExceptionCode.NOT_FOUND);
     return this.postQueryRepository.getAllPosts(query, id);
   }
 
@@ -51,6 +39,7 @@ export class BlogControllers {
     return await this.blogQueryRepository.getBlogById(id);
   }
 
+  @UseGuards(BasicAuthGuard)
   @Post()
   async createBlog(@Body() dto: BlogInputDto) {
     const createPostAndReturnId: string = await this.blogService.createBlog(dto);
@@ -58,12 +47,14 @@ export class BlogControllers {
     return await this.blogQueryRepository.getBlogById(createPostAndReturnId);
   }
 
+  @UseGuards(BasicAuthGuard)
   @Post(':id/posts')
   async createPostByBlog(@Param('id') blogId: string, @Body() dto: PostInputDto) {
     const cretePostByBlogAndReturnId = await this.blogService.createPostByBlog(blogId, dto);
     return this.postQueryRepository.getPostById(cretePostByBlogAndReturnId);
   }
 
+  @UseGuards(BasicAuthGuard)
   @Put(':id')
   @HttpCode(204)
   async updateBlog(@Param('id') id: string, @Body() dto: BlogInputUpdateDto) {
@@ -72,6 +63,7 @@ export class BlogControllers {
 
   //TODO при удаление блога должны удаляться все посты
 
+  @UseGuards(BasicAuthGuard)
   @Delete(':id')
   @HttpCode(204)
   async deleteBlog(@Param('id') id: string) {

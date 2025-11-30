@@ -18,9 +18,7 @@ export class UserQueryRepository {
     return UserViewDto.mapToView(blog);
   }
 
-  async getAllUsers(
-    query: GetUsersQueryParams,
-  ): Promise<PaginatedViewDto<UserViewDto[]>> {
+  async getAllUsers(query: GetUsersQueryParams): Promise<PaginatedViewDto<UserViewDto[]>> {
     const filter: FilterQuery<User> = {};
 
     if (query.searchLoginTerm) {
@@ -38,7 +36,8 @@ export class UserQueryRepository {
     }
     const sortDirection = query.sortDirection ?? SortDirection.Desc;
 
-    const users = await this.userModel.find(filter)
+    const users = await this.userModel
+      .find(filter)
       .sort({ [query.sortBy]: sortDirection })
       .skip(query.calculateSkip())
       .limit(query.pageSize);
