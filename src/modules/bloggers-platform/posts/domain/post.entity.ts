@@ -33,7 +33,7 @@ export class Post {
     post.content = dto.content;
     post.blogId = dto.blogId;
     post.blogName = dto.blogName;
-
+    post.extendedLikesInfo = { likesCount: 0, dislikesCount: 0 };
     return post as PostDocument;
   }
 }

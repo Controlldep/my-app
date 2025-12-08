@@ -20,6 +20,12 @@ export class UserService {
     return await this.userRepository.save(user);
   }
 
+  async findUserById(id:string) {
+    const findUser: UserDocument | null = await this.userRepository.findById(id);
+    if(!findUser) throw new CustomHttpException(DomainExceptionCode.NOT_FOUND)
+
+    return findUser;
+  }
 
   async deleteUser(id: string) {
     const user = await this.userRepository.findById(id);

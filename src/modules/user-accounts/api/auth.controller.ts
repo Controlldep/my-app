@@ -20,7 +20,7 @@ import { AuthRegistrationEmailResendingInputDto } from './input-dto/auth-registr
 import { AuthRegistrationConfirmationInputDto } from './input-dto/auth-registration-confirmation.input-dto';
 import { AuthRegistrationInputDto } from './input-dto/auth-registration.input-dto';
 import { JwtAuthGuard } from '../guards/jwt/jwt-auth.guard';
-import { UserContextDto } from '../guards/dto/user-context.dto';
+import { UserIdDto } from '../guards/dto/user-id.dto';
 import { ExtractUserFromRequest } from '../guards/decorators/extract-user-from-request';
 import { CustomHttpException, DomainExceptionCode } from '../../../core/exceptions/domain.exception';
 
@@ -39,7 +39,7 @@ export class AuthController {
     if (!user) throw new CustomHttpException(DomainExceptionCode.UNAUTHORIZED);
 
     const accessToken: { accessToken: string } = await this.jwtService.createAccessToken(user._id.toString());
-    const refreshToken: string = 'fdgdfgdfg'; //заглушка
+    const refreshToken: string = '.'; //заглушка
     res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true, maxAge: 20000 });
     return accessToken;
   }
@@ -52,7 +52,7 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  async meHandler(@ExtractUserFromRequest() user: UserContextDto) {
+  async meHandler(@ExtractUserFromRequest() user: UserIdDto) {
     return await this.authService.meUser(user.userId);
   }
 

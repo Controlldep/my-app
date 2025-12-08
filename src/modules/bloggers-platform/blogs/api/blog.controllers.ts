@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
 import { BlogInputDto } from './dto/input-dto/blog.input-dto';
 import { PostInputDto } from '../../posts/api/dto/input-dto/post.input-dto';
 import { BlogInputUpdateDto } from './dto/input-dto/blog.input-update-dto';
@@ -13,6 +13,7 @@ import { PostViewDto } from '../../posts/api/dto/view-dto/post.view-dto';
 import { BlogDocument } from '../domain/blog.entity';
 import { CustomHttpException, DomainExceptionCode } from '../../../../core/exceptions/domain.exception';
 import { BasicAuthGuard } from '../../../user-accounts/guards/basic/basic-auth.guard';
+import { JwtService } from '../../../user-accounts/application/jwt.service';
 
 @Controller('blogs')
 export class BlogControllers {
@@ -20,6 +21,7 @@ export class BlogControllers {
     private readonly blogService: BlogService,
     private readonly blogQueryRepository: BlogsQueryRepository,
     private readonly postQueryRepository: PostQueryRepository,
+    private readonly jwtService: JwtService,
   ) {}
 
   @Get()
@@ -28,10 +30,17 @@ export class BlogControllers {
   }
 
   @Get(':id/posts')
-  async getAllPostsByBlog(@Query() query: GetPostQueryInputDto, @Param('id') id: string): Promise<PaginatedViewDto<PostViewDto[]>> {
+  async getAllPostsByBlog(@Query() query: GetPostQueryInputDto, @Param('id') id: string, @Req() req: Request): Promise<PaginatedViewDto<PostViewDto[]>> {
     const findBlog: BlogDocument | null = await this.blogService.findBlogById(id);
     if (!findBlog) throw new CustomHttpException(DomainExceptionCode.NOT_FOUND);
-    return this.postQueryRepository.getAllPosts(query, id);
+    let userId;
+    if(req.headers['authorization']){
+      let token = req.headers['authorization'].split(" ")[1];
+      userId = await this.jwtService.getUserIdByToken(token);
+    }else{
+      userId = undefined;
+    }
+    return this.postQueryRepository.getAllPosts(query, userId, id);
   }
 
   @Get(':id')

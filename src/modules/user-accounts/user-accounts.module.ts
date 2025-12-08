@@ -4,7 +4,7 @@ import { UserRepository } from './infrastructure/user.repository';
 import { User, UserSchema } from './domain/user.entity';
 import { UserService } from './application/user.service';
 import { UserController } from './api/user.controllers';
-import { UserQueryRepository } from './infrastructure/user.query-repository';
+import { UserQueryRepository } from './infrastructure/user.query.repository';
 import { AuthController } from './api/auth.controller';
 import { AuthService } from './application/auth.service';
 import { EmailService } from './application/email.service';
@@ -28,5 +28,6 @@ import { settings } from '../../settings';
     UserRepository, UserService, UserQueryRepository, AuthService, EmailService,
     JwtService, JwtStrategy, JwtAuthGuard],
   controllers: [UserController, AuthController],
+  exports: [UserService],
 })
 export class UserModule {}

@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { UsersInputDto } from './input-dto/users.input-dto';
 import { UserService } from '../application/user.service';
-import { UserQueryRepository } from '../infrastructure/user.query-repository';
+import { UserQueryRepository } from '../infrastructure/user.query.repository';
 import { UserViewDto } from './view-dto/user-view-dto';
 import { PaginatedViewDto } from '../../../core/dto/base.paginated.view-dto';
 import { GetUsersQueryParams } from './view-dto/get-users-query-params';

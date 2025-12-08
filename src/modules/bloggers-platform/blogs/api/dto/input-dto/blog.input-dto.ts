@@ -3,7 +3,7 @@ import { Matches, MaxLength, MinLength } from 'class-validator';
 
 export class BlogInputDto {
   @Trim()
-  @MinLength(3, { message: 'name must be at least 3 characters long' })
+  @MinLength(3, { message: 'name must be at least 4 characters long' })
   @MaxLength(15, { message: 'name cannot be longer than 15 characters' })
   name: string;
   @Trim()
@@ -12,5 +12,6 @@ export class BlogInputDto {
   description: string;
   @Trim()
   @Matches(/^https:\/\/([a-zA-Z0-9_-]+\.)+[a-zA-Z0-9_-]+(\/[a-zA-Z0-9_-]+)*\/?$/, { message: 'Invalid URL format' })
+  @MaxLength(100, { message: 'websiteUrl cannot be longer than 100 characters' })
   websiteUrl: string;
 }

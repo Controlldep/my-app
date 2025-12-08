@@ -4,7 +4,7 @@ import { Trim } from '../../../../../../core/decorators/trim';
 export class PostInputDto {
   @Trim()
   @MinLength(3, { message: 'title must be at least 3 characters long' })
-  @MaxLength(20, { message: 'title cannot be longer than 20 characters' })
+  @MaxLength(30, { message: 'title cannot be longer than 30 characters' })
   title: string;
   @Trim()
   @MinLength(3, { message: 'shortDescription must be at least 3 characters long' })
