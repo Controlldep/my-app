@@ -7,7 +7,9 @@ import { TestingModule } from './testing/testing.module';
 const uri = 'mongodb+srv://admin:admin@cluster0.0qblhxg.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
 
 @Module({
-  imports: [MongooseModule.forRoot(uri), UserModule, BloggersPlatformModule, TestingModule],
+  imports: [
+    MongooseModule.forRoot(uri), UserModule, BloggersPlatformModule, TestingModule,
+  ],
   controllers: [],
   providers: [],
 })

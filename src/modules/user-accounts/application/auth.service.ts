@@ -12,6 +12,7 @@ import { MeUserOutputDto } from './dto/output-dto/me-user.output-dto';
 import { GenerateExpirationDateHelper } from './helpers/generate-expiration-date.helper';
 import { UserFilter } from '../api/type/user.type';
 import { CustomHttpException, DomainExceptionCode } from '../../../core/exceptions/domain.exception';
+import { UserOutputDto } from '../api/view-dto/user.output.dto';
 
 @Injectable()
 export class AuthService {
@@ -20,30 +21,8 @@ export class AuthService {
     private readonly emailService: EmailService,
   ) {}
 
+  //TODO почистить тут все
   async registerUser(user: AuthRegistrationInputDto): Promise<true | null> {
-    //TODO  вынести в хелпер
-    const checkExistsEmail: UserDocument | null = await this.usersRepository.findByLoginOrEmail({email: user.email});
-    if (checkExistsEmail) {
-      throw new CustomHttpException(DomainExceptionCode.BAD_REQUEST, 'incorrect email', [
-        {
-          constraints: {
-            matches: 'incorrect email',
-          },
-          property: 'email',
-        },
-      ]);
-    }
-    const checkExistsLogin: UserDocument | null = await this.usersRepository.findByLoginOrEmail({login: user.login});
-    if (checkExistsLogin) {
-      throw new CustomHttpException(DomainExceptionCode.BAD_REQUEST, 'incorrect login', [
-        {
-          constraints: {
-            matches: 'incorrect login',
-          },
-          property: 'login',
-        },
-      ]);
-    }
     const passwordHash: string = await PasswordHelper.hashPassword(user.password);
     const createUser: UserDocument = User.createInstance({
       ...user,
@@ -53,11 +32,11 @@ export class AuthService {
     });
     await this.usersRepository.save(createUser);
 
-    try {
-      await this.emailService.sendRegistrationEmail(createUser.email, createUser.confirmationCode!);
-    } catch (e) {
-      console.log(e);
-    }
+    // try {
+      this.emailService.sendRegistrationEmail(createUser.email, createUser.confirmationCode!);
+    // } catch (e) {
+    //   console.log(e);
+    // }
 
     return true;
   }
@@ -128,7 +107,7 @@ export class AuthService {
 
     await this.usersRepository.updateConfirmation(user!._id.toString(), newCode, newExpiration);
 
-    await this.emailService.sendRegistrationEmail(user!.email, newCode);
+    this.emailService.sendRegistrationEmail(user!.email, newCode);
     return true;
   }
 
@@ -151,12 +130,12 @@ export class AuthService {
   async meUser(id: string): Promise<MeUserOutputDto | null> {
     const user: UserDocument | null = await this.usersRepository.findById(id);
     if (!user) throw new CustomHttpException(DomainExceptionCode.UNAUTHORIZED);
-
-    return {
+    const outputUser: UserOutputDto = {
       email: user.email,
       login: user.login,
       userId: user._id.toString(),
     };
+    return outputUser;
   }
 
   async passwordRecovery(user: UserDocument): Promise<void> {

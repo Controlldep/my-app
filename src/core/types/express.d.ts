@@ -5,6 +5,8 @@ declare global {
       user?: {
         userId: string | null;
       };
+      deviceId?: string | null;
+      jti?: string | null;
     }
   }
 }

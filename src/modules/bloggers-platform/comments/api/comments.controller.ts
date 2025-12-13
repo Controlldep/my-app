@@ -20,7 +20,7 @@ export class CommentsController {
     private readonly commentsQueryRepository: CommentsQueryRepository,
     private readonly likeService: LikeCommentsService,
     private readonly likeCommentsRepository: LikeCommentsRepository,
-    private readonly jwtService: JwtService
+    private readonly jwtService: JwtService,
   ) {}
 
   @Get(':id')
@@ -32,7 +32,7 @@ export class CommentsController {
       token= req.headers['authorization'].split(" ")[1];
       userId = await this.jwtService.getUserIdByToken(token);
     }else{
-      userId = undefined
+      userId = undefined;
     }
     return await this.commentsQueryRepository.getCommentsById(id, userId);
   }

@@ -12,10 +12,10 @@ export class UserQueryRepository {
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
 
   async getUsersById(id: string) {
-    const blog = await this.userModel.findOne({ _id: id });
-    if (!blog) throw new NotFoundException('users not found');
+    const user = await this.userModel.findOne({ _id: id });
+    if (!user) throw new NotFoundException('users not found');
 
-    return UserViewDto.mapToView(blog);
+    return UserViewDto.mapToView(user);
   }
 
   async getAllUsers(query: GetUsersQueryParams): Promise<PaginatedViewDto<UserViewDto[]>> {
