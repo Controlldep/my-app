@@ -1,35 +1,34 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Model } from 'mongoose';
 import { UsersInputDto } from '../api/input-dto/users.input-dto';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Schema({ timestamps: true })
-export class User {
-  @Prop({ type: String, required: true })
+@Entity()
+export class UserModel {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ type: 'varchar', length: 255 })
   login: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar', length: 255 })
   passwordHash: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar', length: 255 })
   email: string;
 
-  @Prop({ type: Boolean, default: false })
+  @Column({ type: 'boolean', default: false })
   isConfirmed: boolean;
 
-  @Prop({ type: String, default: null })
+  @Column({ type: 'varchar', nullable: true })
   confirmationCode: string | null;
 
-  @Prop({ type: Date, default: null })
+  @Column({ type: 'timestamp', nullable: true })
   expirationDate: Date | null;
 
+  @CreateDateColumn()
   createdAt: Date;
-  updatedAt: Date;
 
-  @Prop({ type: Date, nullable: true })
-  deletedAt: Date | null;
-
-  static createInstance(dto: UsersInputDto): UserDocument {
-    const user = new this();
+  static createInstance(dto: UsersInputDto): UserModel {
+    const user: UserModel = new this();
     user.email = dto.email;
     user.passwordHash = dto.password;
     user.login = dto.login;
@@ -37,14 +36,6 @@ export class User {
     user.confirmationCode = dto.confirmationCode || null;
     user.expirationDate = dto.expirationDate || null;
 
-    return user as UserDocument;
+    return user;
   }
 }
-
-export const UserSchema = SchemaFactory.createForClass(User);
-
-UserSchema.loadClass(User);
-
-export type UserDocument = HydratedDocument<User>;
-
-export type UserModelType = Model<UserDocument> & typeof User;

@@ -1,25 +1,31 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model } from 'mongoose';
-import { User, UserDocument } from '../domain/user.entity';
+import { FilterQuery } from 'mongoose';
+import { UserModel } from '../domain/user.entity';
 import { UserViewDto } from '../api/view-dto/user-view-dto';
 import { PaginatedViewDto } from '../../../core/dto/base.paginated.view-dto';
 import { SortDirection } from '../../../core/dto/base.query-params.input-dto';
 import { GetUsersQueryParams } from '../api/view-dto/get-users-query-params';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class UserQueryRepository {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
+  constructor(
+    @InjectRepository(UserModel)
+    private readonly userRepository: Repository<UserModel>,
+  ) {}
 
   async getUsersById(id: string) {
-    const user = await this.userModel.findOne({ _id: id });
+    const user = await this.userRepository.findOne({
+      where: { id },
+    });
     if (!user) throw new NotFoundException('users not found');
 
     return UserViewDto.mapToView(user);
   }
 
   async getAllUsers(query: GetUsersQueryParams): Promise<PaginatedViewDto<UserViewDto[]>> {
-    const filter: FilterQuery<User> = {};
+    const filter: FilterQuery<UserModel> = {};
 
     if (query.searchLoginTerm) {
       filter.$or = filter.$or || [];
@@ -36,13 +42,14 @@ export class UserQueryRepository {
     }
     const sortDirection = query.sortDirection ?? SortDirection.Desc;
 
-    const users = await this.userModel
-      .find(filter)
-      .sort({ [query.sortBy]: sortDirection })
-      .skip(query.calculateSkip())
-      .limit(query.pageSize);
+    const users = await this.userRepository.find({
+      where: filter,
+      order: { [query.sortBy]: sortDirection },
+      skip: query.calculateSkip(),
+      take: query.pageSize,
+    });
 
-    const totalCount = await this.userModel.countDocuments(filter);
+    const totalCount = await this.userRepository.count({ where: filter });
 
     const items = users.map((user) => UserViewDto.mapToView(user));
 

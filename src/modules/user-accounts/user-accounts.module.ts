@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserRepository } from './infrastructure/user.repository';
-import { User, UserSchema } from './domain/user.entity';
+import { UserModel } from './domain/user.entity';
 import { UserService } from './application/user.service';
 import { UserController } from './api/user.controllers';
 import { UserQueryRepository } from './infrastructure/user.query.repository';
@@ -24,11 +24,12 @@ import { Session, SessionSchema } from './domain/session.entity';
 import { RefreshTokenStrategy } from './guards/strategy/refresh-token.strategy';
 import { RefreshTokenGuard } from './guards/refresh/refresh-token-auth.guard';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
   imports: [
+    TypeOrmModule.forFeature([UserModel]),
     MongooseModule.forFeature([
-      { name: User.name, schema: UserSchema },
       { name: RefreshToken.name, schema: RefreshTokenSchema },
       { name: Session.name, schema: SessionSchema },
     ]),

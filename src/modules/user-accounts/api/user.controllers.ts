@@ -22,7 +22,7 @@ export class UserController {
 
   @UseGuards(BasicAuthGuard)
   @Post()
-  async createUser(@Body() dto: UsersInputDto) {
+  async createUser(@Body() dto: UsersInputDto): Promise<UserViewDto> {
     const createUserAndReturnId: string = await this.userService.createUser(dto);
 
     return await this.userQueryRepository.getUsersById(createUserAndReturnId);
@@ -31,7 +31,7 @@ export class UserController {
   @UseGuards(BasicAuthGuard)
   @Delete(':id')
   @HttpCode(204)
-  async deleteUser(@Param('id') id: string) {
+  async deleteUser(@Param('id') id: string): Promise<boolean> {
     return await this.userService.deleteUser(id);
   }
 }

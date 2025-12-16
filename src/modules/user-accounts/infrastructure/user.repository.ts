@@ -1,49 +1,60 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { User, UserDocument } from '../domain/user.entity';
-import { Model } from 'mongoose';
+import { UserModel } from '../domain/user.entity';
 import { UserFilter } from '../api/type/user.type';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, UpdateResult } from 'typeorm';
 
 @Injectable()
 export class UserRepository {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
+  constructor(
+    @InjectRepository(UserModel)
+    private readonly userRepository: Repository<UserModel>,
+  ) {}
 
-  async findById(id: string): Promise<UserDocument | null> {
-    return this.userModel.findOne({
-      _id: id,
-      deletedAt: null,
+  async findById(id: string): Promise<UserModel | null> {
+    return await this.userRepository.findOne({
+      where: { id: id },
     });
   }
 
-  async save(dto: UserDocument): Promise<string> {
-    const user: UserDocument = new this.userModel(dto);
-    const saveUSer: UserDocument = await user.save();
+  async save(dto: UserModel): Promise<string> {
+    const user: UserModel = this.userRepository.create(dto);
+    const saveUSer: UserModel = await this.userRepository.save(user);
 
-    return saveUSer._id.toString();
+    return saveUSer.id.toString();
   }
 
-  async deleteUser(id: string) {
-    const deleteUser = await this.userModel.deleteOne({ _id: id });
-    return deleteUser.deletedCount === 1;
+  async deleteUser(id: string): Promise<boolean> {
+    const deleteUser = await this.userRepository.delete(id);
+    return deleteUser.affected === 1;
   }
 
-  async verifyUser(userId: string) {
-    return this.userModel.updateOne({ _id: userId }, { $set: { isConfirmed: true, confirmationCode: null, expirationDate: null } });
+  async verifyUser(id: string): Promise<UpdateResult> {
+    return this.userRepository.update(id, { isConfirmed: true, confirmationCode: null, expirationDate: null });
   }
 
-  async findByLoginOrEmail(filter: UserFilter) {
-    return this.userModel.findOne(filter);
+  async findByLoginOrEmail(filter: UserFilter): Promise<UserModel | null> {
+    return this.userRepository.findOne({
+      where: filter,
+    });
   }
 
-  async findUserByConfirmationCode(code: string) {
-    return this.userModel.findOne({ confirmationCode: code });
+  async findUserByConfirmationCode(code: string): Promise<UserModel | null> {
+    return this.userRepository.findOne({
+      where: { confirmationCode: code },
+    });
   }
 
-  async updateConfirmation(userId: string, code: string, expirationDate: Date) {
-    return this.userModel.updateOne({ _id: userId }, { $set: { confirmationCode: code, expirationDate: expirationDate } });
+  async updateConfirmation(id: string, code: string, expirationDate: Date): Promise<UpdateResult> {
+    return this.userRepository.update(id, {
+      confirmationCode: code,
+      expirationDate,
+    });
   }
 
-  async updatePassword(userId: string, passwordHash: string) {
-    return this.userModel.updateOne({ _id: userId }, { $set: { password: passwordHash } });
+  async updatePassword(id: string, password: string): Promise<UpdateResult> {
+    return this.userRepository.update(id, {
+      passwordHash: password,
+    });
   }
 }
