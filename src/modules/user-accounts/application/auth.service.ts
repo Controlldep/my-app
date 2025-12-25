@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { UserRepository } from '../infrastructure/user.repository';
 import { EmailService } from './email.service';
 import { AuthLoginInputDto } from '../api/input-dto/auth-login.input-dto';
-import { User, UserDocument } from '../domain/user.entity';
+import { UserModel } from '../domain/user.entity';
 import { AuthRegistrationEmailResendingInputDto } from '../api/input-dto/auth-registration-email-resending.input.dto';
 import { AuthRegistrationConfirmationInputDto } from '../api/input-dto/auth-registration-confirmation.input-dto';
 import { AuthRegistrationInputDto } from '../api/input-dto/auth-registration.input-dto';
@@ -23,8 +23,30 @@ export class AuthService {
 
   //TODO почистить тут все
   async registerUser(user: AuthRegistrationInputDto): Promise<true | null> {
+    // const findUserByEmail = await this.usersRepository.findByLoginOrEmail({ email: user.email })
+    // if(findUserByEmail) {
+    //   throw new CustomHttpException(DomainExceptionCode.BAD_REQUEST, 'incorrect email', [
+    //     {
+    //       constraints: {
+    //         matches: 'Incorrect email',
+    //       },
+    //       property: 'email',
+    //     },
+    //   ]);
+    // }
+    // const findUserBylogin = await this.usersRepository.findByLoginOrEmail({ login: user.login })
+    // if(findUserBylogin) {
+    //   throw new CustomHttpException(DomainExceptionCode.BAD_REQUEST, 'incorrect login', [
+    //     {
+    //       constraints: {
+    //         matches: 'Incorrect login',
+    //       },
+    //       property: 'login',
+    //     },
+    //   ]);
+    // }
     const passwordHash: string = await PasswordHelper.hashPassword(user.password);
-    const createUser: UserDocument = User.createInstance({
+    const createUser: UserModel = UserModel.createInstance({
       ...user,
       password: passwordHash,
       confirmationCode: GenerateConfirmationCodeHelper.generateCode(),
@@ -42,7 +64,7 @@ export class AuthService {
   }
   //TODO вынести все эти проверки в хелпер
   async registrationConfirmationUser(code: AuthRegistrationConfirmationInputDto) {
-    const user: UserDocument | null = await this.usersRepository.findUserByConfirmationCode(code.code);
+    const user: UserModel | null = await this.usersRepository.findUserByConfirmationCode(code.code);
 
     if (!user) {
       throw new CustomHttpException(DomainExceptionCode.BAD_REQUEST, 'incorrect login', [
@@ -77,11 +99,11 @@ export class AuthService {
       ]);
     }
 
-    await this.usersRepository.verifyUser(user._id.toString());
+    await this.usersRepository.verifyUser(user.id);
   }
 
   async resendRegistrationEmail(email: AuthRegistrationEmailResendingInputDto) {
-    const user: UserDocument | null = await this.usersRepository.findByLoginOrEmail( {email: email.email} );
+    const user: UserModel | null = await this.usersRepository.findByLoginOrEmail( {email: email.email} );
     if (!user) {
       throw new CustomHttpException(DomainExceptionCode.BAD_REQUEST, 'incorrect email', [
         {
@@ -93,8 +115,7 @@ export class AuthService {
       ]);
     }
 
-    if (user.isConfirmed === true)
-      throw new CustomHttpException(DomainExceptionCode.BAD_REQUEST, 'incorrect email', [
+    if (user.isConfirmed == true) throw new CustomHttpException(DomainExceptionCode.BAD_REQUEST, 'incorrect email', [
       {
         constraints: {
           matches: 'Already confirmed',
@@ -105,9 +126,9 @@ export class AuthService {
     const newCode: string = GenerateConfirmationCodeHelper.generateCode();
     const newExpiration: Date = GenerateExpirationDateHelper.generateDate();
 
-    await this.usersRepository.updateConfirmation(user!._id.toString(), newCode, newExpiration);
+    await this.usersRepository.updateConfirmation(user.id, newCode, newExpiration);
 
-    this.emailService.sendRegistrationEmail(user!.email, newCode);
+    this.emailService.sendRegistrationEmail(user.email, newCode);
     return true;
   }
 
@@ -117,7 +138,7 @@ export class AuthService {
     if(isEmail) filter = {email: data.loginOrEmail}
     if(!isEmail) filter = {login: data.loginOrEmail}
 
-    const user: UserDocument | null = await this.usersRepository.findByLoginOrEmail(filter);
+    const user: UserModel | null = await this.usersRepository.findByLoginOrEmail(filter);
 
     if (!user) throw new CustomHttpException(DomainExceptionCode.UNAUTHORIZED);
 
@@ -128,26 +149,26 @@ export class AuthService {
   }
 
   async meUser(id: string): Promise<MeUserOutputDto | null> {
-    const user: UserDocument | null = await this.usersRepository.findById(id);
+    const user: UserModel | null = await this.usersRepository.findById(id);
     if (!user) throw new CustomHttpException(DomainExceptionCode.UNAUTHORIZED);
     const outputUser: UserOutputDto = {
       email: user.email,
       login: user.login,
-      userId: user._id.toString(),
+      userId: user.id,
     };
     return outputUser;
   }
 
-  async passwordRecovery(user: UserDocument): Promise<void> {
+  async passwordRecovery(user: UserModel): Promise<void> {
     const newCode: string = GenerateConfirmationCodeHelper.generateCode();
     const newExpiration: Date = GenerateExpirationDateHelper.generateDate();
-    await this.usersRepository.updateConfirmation(user._id.toString(), newCode, newExpiration);
+    await this.usersRepository.updateConfirmation(user.id, newCode, newExpiration);
 
     await this.emailService.passwordRecovery(user.email, newCode);
   }
 
   async saveNewPassword(code: string, password: string) {
-    const findUserInDb: UserDocument | null = await this.usersRepository.findUserByConfirmationCode(code);
+    const findUserInDb: UserModel | null = await this.usersRepository.findUserByConfirmationCode(code);
     if (!findUserInDb) return { success: false, field: 'recoveryCode', message: 'Invalid recovery code' };
     //TODO вынести в мидлу
     if (findUserInDb.expirationDate! < new Date()) {
@@ -159,7 +180,7 @@ export class AuthService {
     }
 
     const passwordHash: string = await PasswordHelper.hashPassword(password);
-    await this.usersRepository.updatePassword(findUserInDb._id.toString(), passwordHash);
+    await this.usersRepository.updatePassword(findUserInDb.id, passwordHash);
     return { success: true };
   }
 

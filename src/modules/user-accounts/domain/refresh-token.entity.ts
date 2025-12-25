@@ -1,34 +1,30 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
 import { DomainRefreshTokenDto } from '../dto/domain-refresh-token.dto';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Schema()
-export class RefreshToken {
-  @Prop({ type: String, required: true })
+@Entity()
+export class RefreshTokenModel {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ type: 'varchar' })
   userId: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar' })
   jtiHash: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar' })
   deviceId: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar', nullable: true })
   expiresAt: string | null;
 
-  static createInstance(dto: DomainRefreshTokenDto): RefreshTokenDocument {
-    const refreshToken = new this();
+  static createInstance(dto: DomainRefreshTokenDto): RefreshTokenModel {
+    const refreshToken: RefreshTokenModel = new this();
     refreshToken.userId = dto.userId;
     refreshToken.jtiHash = dto.jtiHash;
     refreshToken.deviceId = dto.deviceId;
     refreshToken.expiresAt = dto.expiresAt;
 
-    return refreshToken as RefreshTokenDocument;
+    return refreshToken;
   }
 }
-
-export const RefreshTokenSchema = SchemaFactory.createForClass(RefreshToken);
-
-RefreshTokenSchema.loadClass(RefreshToken);
-
-export type RefreshTokenDocument = HydratedDocument<RefreshToken>;

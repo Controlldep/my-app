@@ -1,32 +1,34 @@
-import { HydratedDocument } from 'mongoose';
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { PostExtendedLikesInfoDto } from './dto/post.extendedLikesInfo.dto';
 import { PostDto } from './dto/post.dto';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Schema({ timestamps: true })
-export class Post {
-  @Prop({ type: String, required: true })
+@Entity()
+export class PostModel {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ type: 'varchar', length: 255 })
   title: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar' })
   shortDescription: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar' })
   content: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar', length: 255 })
   blogId: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar', length: 255 })
   blogName: string;
 
-  @Prop({ type: PostExtendedLikesInfoDto })
+  @Column({ type: 'jsonb', default: () => `'{"likesCount":0,"dislikesCount":0}'` })
   extendedLikesInfo: PostExtendedLikesInfoDto;
 
+  @CreateDateColumn()
   createdAt: Date;
-  updatedAt: Date;
 
-  static createInstance(dto: PostDto): PostDocument {
+  static createInstance(dto: PostDto): PostModel {
     const post = new this();
     post.title = dto.title;
     post.shortDescription = dto.shortDescription;
@@ -34,12 +36,6 @@ export class Post {
     post.blogId = dto.blogId;
     post.blogName = dto.blogName;
     post.extendedLikesInfo = { likesCount: 0, dislikesCount: 0 };
-    return post as PostDocument;
+    return post;
   }
 }
-
-export const PostSchema = SchemaFactory.createForClass(Post);
-
-PostSchema.loadClass(Post);
-
-export type PostDocument = HydratedDocument<Post>;

@@ -1,8 +1,8 @@
 import { LikePostRepositories } from '../infrastructure/like-post.repository';
 import { PostRepository } from '../../posts/infrastructure/post.repository';
 import { Injectable } from '@nestjs/common';
-import { LikePost, LikePostDocument } from '../domain/like-post.entity';
-import { PostDocument } from '../../posts/domain/post.entity';
+import { LikePostModel } from '../domain/like-post.entity';
+import { PostModel } from '../../posts/domain/post.entity';
 
 @Injectable()
 export class LikePostService {
@@ -11,10 +11,10 @@ export class LikePostService {
     private readonly postRepository: PostRepository,
   ) {}
 
-  async createPostLike(userId: string, post: PostDocument, login: string) {
-    const createLikePost: LikePostDocument = LikePost.createInstance({
+  async createPostLike(userId: string, post: PostModel, login: string) {
+    const createLikePost: LikePostModel = LikePostModel.createInstance({
       userId: userId,
-      postId: post._id.toString(),
+      postId: post.id.toString(),
       login: login,
       myStatus: 'None',
     });
@@ -26,8 +26,8 @@ export class LikePostService {
     return await this.postLikeRepositories.checkStatus(userId, postId);
   }
 
-  async changeStatus(userId: string, post: PostDocument, status: string) {
-    const checkStatus = await this.postLikeRepositories.checkStatus(userId, post._id.toString());
+  async changeStatus(userId: string, post: PostModel, status: 'Like' | 'None' | 'Dislike') {
+    const checkStatus = await this.postLikeRepositories.checkStatus(userId, post.id.toString());
     if(!checkStatus) return null
     if(checkStatus!.myStatus === status) return null
 
@@ -53,7 +53,7 @@ export class LikePostService {
       post.extendedLikesInfo.dislikesCount += 1;
     }
 
-    await this.postLikeRepositories.updateStatus(userId, post._id.toString(), status);
+    await this.postLikeRepositories.updateStatus(userId, post.id.toString(), status);
     await this.postRepository.updateLikesInfo(post);
   }
 }

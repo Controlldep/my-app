@@ -4,7 +4,7 @@ import { RefreshTokenRepositories } from '../infrastructure/refresh-token.reposi
 import { CustomHttpException, DomainExceptionCode } from '../../../core/exceptions/domain.exception';
 import { ExtractDeviceAndUserFromRequest } from '../guards/decorators/extract-device-and-user-from-request';
 import { DeviceAndUserIdDto } from '../guards/dto/device-and-user-id.dto';
-import { SessionDocument } from '../domain/session.entity';
+import { SessionModel } from '../domain/session.entity';
 import { RefreshTokenGuard } from '../guards/refresh/refresh-token-auth.guard';
 
 @Controller('/security/devices')
@@ -24,7 +24,7 @@ export class SecurityDevicesController {
   @Delete(':id')
   @HttpCode(204)
   async deleteSessionById(@Param('id') id: string, @ExtractDeviceAndUserFromRequest() userInfo: DeviceAndUserIdDto) {
-    const sessionDevice: SessionDocument | null = await this.sessionService.findSessionByDeviceId(id);
+    const sessionDevice: SessionModel | null = await this.sessionService.findSessionByDeviceId(id);
     if (!sessionDevice) throw new CustomHttpException(DomainExceptionCode.NOT_FOUND);
     //TODO вынести через сервис
     if (sessionDevice.userId !== userInfo.userId) throw new CustomHttpException(DomainExceptionCode.FORBIDDEN);

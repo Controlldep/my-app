@@ -1,40 +1,33 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Model } from 'mongoose';
 import { BlogInputDto } from '../api/dto/input-dto/blog.input-dto';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Schema({ timestamps: true })
-export class Blog {
-  @Prop({ type: String, required: true })
+@Entity()
+export class BlogModel {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ type: 'varchar', length: 255 })
   name: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar' })
   description: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar', length: 255 })
   websiteUrl: string;
 
-  @Prop({ type: Boolean, required: true })
+  @Column({ type: 'boolean', default: false })
   isMembership: boolean;
 
+  @CreateDateColumn()
   createdAt: Date;
-  updatedAt: Date;
 
-  @Prop({ type: Date, nullable: true })
-  deletedAt: Date | null;
-
-  static createInstance(dto: BlogInputDto): BlogDocument {
-    const blog = new this();
+  static createInstance(dto: BlogInputDto): BlogModel {
+    const blog: BlogModel = new this();
     blog.name = dto.name;
     blog.description = dto.description;
     blog.websiteUrl = dto.websiteUrl;
     blog.isMembership = false;
 
-    return blog as BlogDocument;
+    return blog;
   }
 }
-
-export const BlogSchema = SchemaFactory.createForClass(Blog);
-
-BlogSchema.loadClass(Blog);
-
-export type BlogDocument = HydratedDocument<Blog>;

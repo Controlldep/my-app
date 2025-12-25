@@ -6,8 +6,8 @@ import { LikeCommentsRepository } from '../../comments-like/infrastructrure/like
 import { JwtService } from '../../../user-accounts/application/jwt.service';
 import { CustomHttpException, DomainExceptionCode } from '../../../../core/exceptions/domain.exception';
 import { JwtAuthGuard } from '../../../user-accounts/guards/jwt/jwt-auth.guard';
-import { CommentsDocument } from '../domain/comments.entity';
-import { LikeComments, LikeCommentsDocument } from '../../comments-like/domain/like-comments.entity';
+import { CommentsModel } from '../domain/comments.entity';
+import { LikeCommentsModel } from '../../comments-like/domain/like-comments.entity';
 import { ExtractUserFromRequest } from '../../../user-accounts/guards/decorators/extract-user-from-request';
 import { UserIdDto } from '../../../user-accounts/guards/dto/user-id.dto';
 import { UpdateCommentsDto } from './dto/input-dto/update-comments.dto';
@@ -42,7 +42,7 @@ export class CommentsController {
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
   async deleteCommentHandler(@Param('id') id: string, @ExtractUserFromRequest() user: UserIdDto) {
-    const comment: CommentsDocument | null = await this.commentsService.getCommentById(id);
+    const comment: CommentsModel | null = await this.commentsService.getCommentById(id);
     if (!comment) throw new CustomHttpException(DomainExceptionCode.NOT_FOUND);
 
     if (comment.commentatorInfo.userId !== user.userId) throw new CustomHttpException(DomainExceptionCode.FORBIDDEN);
@@ -54,7 +54,7 @@ export class CommentsController {
   @UseGuards(JwtAuthGuard)
   @Put(':id')
   async updateCommentHandler(@Param('id') id: string, @ExtractUserFromRequest() user: UserIdDto, @Body() dto: UpdateCommentsDto) {
-    const comment: CommentsDocument | null = await this.commentsService.getCommentById(id);
+    const comment: CommentsModel | null = await this.commentsService.getCommentById(id);
     if (!comment) throw new CustomHttpException(DomainExceptionCode.NOT_FOUND);
 
     if (comment.commentatorInfo.userId !== user.userId) throw new CustomHttpException(DomainExceptionCode.FORBIDDEN);
@@ -78,15 +78,15 @@ export class CommentsController {
       ]);
     }
 
-    const findComment: CommentsDocument | null = await this.commentsService.getCommentById(id);
+    const findComment: CommentsModel | null = await this.commentsService.getCommentById(id);
     if (!findComment) throw new CustomHttpException(DomainExceptionCode.NOT_FOUND);
 
-    const findUserLikeSchema = await this.likeService.checkStatus(userId , findComment._id.toString())
+    const findUserLikeSchema = await this.likeService.checkStatus(userId, findComment.id.toString())
 //Todo в сервисы унести
     if(!findUserLikeSchema) {
-      const newLike: LikeCommentsDocument = LikeComments.createInstance({
+      const newLike: LikeCommentsModel = LikeCommentsModel.createInstance({
         userId,
-        commentId: findComment._id.toString(),
+        commentId: findComment.id.toString(),
         myStatus: 'None',
       });
       await this.likeCommentsRepository.save(newLike);

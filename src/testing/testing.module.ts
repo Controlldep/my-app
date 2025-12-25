@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { DeleteAllData } from './delete-all-data';
+import { TestingController } from './delete-all-data-sql';
 
 @Module({
   imports: [],
-  controllers: [DeleteAllData],
+  controllers: [TestingController],
 })
 export class TestingModule {}

@@ -7,7 +7,7 @@ import { PaginatedViewDto } from '../../../core/dto/base.paginated.view-dto';
 import { GetUsersQueryParams } from './view-dto/get-users-query-params';
 import { BasicAuthGuard } from '../guards/basic/basic-auth.guard';
 
-@Controller('users')
+@Controller('sa/users')
 export class UserController {
   constructor(
     private readonly userService: UserService,

@@ -1,19 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { Session, SessionDocument } from '../domain/session.entity';
-import { SessionRepositories } from '../infrastructure/session.repository';
+import { SessionModel } from '../domain/session.entity';
+import { SessionRepository } from '../infrastructure/session.repository';
 import { v4 as uuidv4 } from 'uuid';
 import { SessionInputDto } from '../api/input-dto/session.input.dto';
 import { SessionViewDto } from '../api/view-dto/session-view.dto';
 @Injectable()
 export class SessionService {
-  constructor(private readonly sessionRepositories: SessionRepositories) {}
+  constructor(private readonly sessionRepositories: SessionRepository) {}
 
   async createDeviceID() {
     return await uuidv4();
   }
 
   async saveSession(sessionData: SessionInputDto): Promise<boolean> {
-    const session: SessionDocument = Session.createInstance({
+    const session: SessionModel = SessionModel.createInstance({
       userId: sessionData.userId,
       deviceId: sessionData.deviceId,
       ip: sessionData.ip,
@@ -24,14 +24,14 @@ export class SessionService {
     return await this.sessionRepositories.createSession(session);
   }
 
-  async findSessionByDeviceId(deviceId: string): Promise<SessionDocument | null> {
-    const findSessionById: SessionDocument | null = await this.sessionRepositories.findSessionByDeviceId(deviceId);
+  async findSessionByDeviceId(deviceId: string): Promise<SessionModel | null> {
+    const findSessionById: SessionModel | null = await this.sessionRepositories.findSessionByDeviceId(deviceId);
 
     return findSessionById;
   }
 
   async getAllDevices(userId: string): Promise<SessionViewDto[]> {
-    const getDevices: SessionDocument[] = await this.sessionRepositories.getAllSessionsByUser(userId);
+    const getDevices: SessionModel[] = await this.sessionRepositories.getAllSessionsByUser(userId);
     const items: SessionViewDto[] = getDevices.map((blog) => SessionViewDto.mapToView(blog));
     return items;
   }

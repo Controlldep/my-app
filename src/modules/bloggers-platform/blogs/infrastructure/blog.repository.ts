@@ -1,31 +1,39 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { Blog, BlogDocument } from '../domain/blog.entity';
+import { BlogModel } from '../domain/blog.entity';
 import { BlogInputUpdateDto } from '../api/dto/input-dto/blog.input-update-dto';
 import { CustomHttpException, DomainExceptionCode } from '../../../../core/exceptions/domain.exception';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class BlogRepository {
-  constructor(@InjectModel(Blog.name) private blogModel: Model<BlogDocument>) {}
+  constructor(
+    @InjectRepository(BlogModel)
+    private readonly blogRepository: Repository<BlogModel>,
+  ) {}
 
-  async findBlogById(id: string): Promise<BlogDocument | null> {
-    return await this.blogModel.findById(id);
+  async findBlogById(id: string): Promise<BlogModel | null> {
+    const blog = await this.blogRepository.findOne({ where: { id } });
+    return blog || null;
   }
 
-  async save(dto: BlogDocument): Promise<string> {
-    const blog: BlogDocument = new this.blogModel(dto);
-    const saveBlog: BlogDocument = await blog.save();
-    return saveBlog._id.toString();
+  async save(dto: BlogModel): Promise<string> {
+    const blog = this.blogRepository.create(dto);
+    const saveBlog = await this.blogRepository.save(blog);
+    return saveBlog.id.toString();
   }
 
   async updateBlog(id: string, dto: BlogInputUpdateDto) {
-    const result = await this.blogModel.findByIdAndUpdate(id, dto);
-    if (!result) throw new CustomHttpException(DomainExceptionCode.NOT_FOUND);
+    const result = await this.blogRepository.update(id, dto);
+    if (result.affected === 0) {
+      throw new CustomHttpException(DomainExceptionCode.NOT_FOUND);
+    }
   }
 
   async deleteBlog(id: string) {
-    const deleteBlog = await this.blogModel.findOneAndDelete({ _id: id });
-    if (!deleteBlog) throw new CustomHttpException(DomainExceptionCode.NOT_FOUND);
+    const result = await this.blogRepository.delete(id);
+    if (result.affected === 0) {
+      throw new CustomHttpException(DomainExceptionCode.NOT_FOUND);
+    }
   }
 }

@@ -9,7 +9,7 @@ export class UserModel {
   @Column({ type: 'varchar', length: 255 })
   login: string;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar', nullable: false, default: '' })
   passwordHash: string;
 
   @Column({ type: 'varchar', length: 255 })

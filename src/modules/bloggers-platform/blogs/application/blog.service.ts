@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { BlogInputDto } from '../api/dto/input-dto/blog.input-dto';
-import { Blog, BlogDocument } from '../domain/blog.entity';
+import { BlogModel } from '../domain/blog.entity';
 import { PostInputDto } from '../../posts/api/dto/input-dto/post.input-dto';
 import { BlogInputUpdateDto } from '../api/dto/input-dto/blog.input-update-dto';
 import { BlogRepository } from '../infrastructure/blog.repository';
-import { Post, PostDocument } from '../../posts/domain/post.entity';
+import { PostModel } from '../../posts/domain/post.entity';
 import { PostRepository } from '../../posts/infrastructure/post.repository';
 import { CustomHttpException, DomainExceptionCode } from '../../../../core/exceptions/domain.exception';
 
@@ -16,15 +16,15 @@ export class BlogService {
   ) {}
 
   async createBlog(dto: BlogInputDto) {
-    const blog: BlogDocument = Blog.createInstance(dto);
+    const blog: BlogModel = BlogModel.createInstance(dto);
     return await this.blogRepository.save(blog);
   }
 
   async createPostByBlog(blogId: string, dto: PostInputDto) {
-    const findBlog: BlogDocument | null = await this.blogRepository.findBlogById(blogId);
+    const findBlog: BlogModel | null = await this.blogRepository.findBlogById(blogId);
     if (!findBlog) throw new CustomHttpException(DomainExceptionCode.NOT_FOUND);
 
-    const post: PostDocument = Post.createInstance({
+    const post: PostModel = PostModel.createInstance({
       ...dto,
       blogId: blogId,
       blogName: findBlog.name,

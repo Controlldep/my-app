@@ -1,29 +1,31 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
 import { SessionInputDto } from '../api/input-dto/session.input.dto';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Schema()
-export class Session {
-  @Prop({ type: String, required: true })
+@Entity()
+export class SessionModel {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ type: 'varchar' })
   deviceId: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar' })
   userId: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar' })
   ip: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar' })
   title: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar' })
   lastActiveDate: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar' })
   expirationDate: string;
 
-  static createInstance(dto: SessionInputDto): SessionDocument {
-    const session = new this();
+  static createInstance(dto: SessionInputDto): SessionModel {
+    const session: SessionModel = new this();
     session.deviceId = dto.deviceId;
     session.userId = dto.userId;
     session.ip = dto.ip;
@@ -31,12 +33,6 @@ export class Session {
     session.lastActiveDate = dto.lastActiveDate;
     session.expirationDate = dto.expirationDate;
 
-    return session as SessionDocument;
+    return session;
   }
 }
-
-export const SessionSchema = SchemaFactory.createForClass(Session);
-
-SessionSchema.loadClass(Session);
-
-export type SessionDocument = HydratedDocument<Session>;

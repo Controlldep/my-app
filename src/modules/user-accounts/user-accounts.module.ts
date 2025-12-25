@@ -18,21 +18,16 @@ import { SecurityDevicesController } from './api/session.controller';
 import { RefreshTokenService } from './application/refresh-token.service';
 import { SessionService } from './application/session.service';
 import { RefreshTokenRepositories } from './infrastructure/refresh-token.repositiry';
-import { SessionRepositories } from './infrastructure/session.repository';
-import { RefreshToken, RefreshTokenSchema } from './domain/refresh-token.entity';
-import { Session, SessionSchema } from './domain/session.entity';
+import { SessionRepository } from './infrastructure/session.repository';
+import { RefreshTokenModel } from './domain/refresh-token.entity';
+import { SessionModel } from './domain/session.entity';
 import { RefreshTokenStrategy } from './guards/strategy/refresh-token.strategy';
 import { RefreshTokenGuard } from './guards/refresh/refresh-token-auth.guard';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
-
 @Module({
   imports: [
-    TypeOrmModule.forFeature([UserModel]),
-    MongooseModule.forFeature([
-      { name: RefreshToken.name, schema: RefreshTokenSchema },
-      { name: Session.name, schema: SessionSchema },
-    ]),
+    TypeOrmModule.forFeature([UserModel, SessionModel, RefreshTokenModel]),
     PassportModule,
     JwtModule.register({
       secret: settings.JWT_SECRET,
@@ -50,7 +45,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
   providers: [
     UserRepository, UserService, UserQueryRepository, AuthService, EmailService,
     JwtService, JwtStrategy, JwtAuthGuard, RefreshTokenService, SessionService,
-    RefreshTokenRepositories, SessionRepositories, RefreshTokenStrategy, RefreshTokenGuard],
+    RefreshTokenRepositories, SessionRepository, RefreshTokenStrategy, RefreshTokenGuard],
   controllers: [UserController, AuthController, SecurityDevicesController],
   exports: [UserService, RefreshTokenRepositories],
 })

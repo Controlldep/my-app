@@ -1,28 +1,30 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
 import { commentsDto } from './dto/comments.dto';
 import { CommentsLikesInfoDto } from './dto/comments-likes-info.dto';
 import { CommentsCommentatorInfoDto } from './dto/comments-commentator-info.dto';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Schema({ timestamps: true })
-export class Comments {
-  @Prop({ type: String, required: true })
+@Entity()
+export class CommentsModel {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ type: 'varchar' })
   content: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar', length: 255 })
   postId: string;
 
-  @Prop({ type: CommentsCommentatorInfoDto })
+  @Column({ type: 'jsonb' })
   commentatorInfo: CommentsCommentatorInfoDto;
 
-  @Prop({ type: CommentsLikesInfoDto })
+  @Column({ type: 'jsonb', default: () => `'{"likesCount":0,"dislikesCount":0}'` })
   likesInfo: CommentsLikesInfoDto;
 
+  @CreateDateColumn()
   createdAt: Date;
-  updatedAt: Date;
 
-  static createInstance(dto: commentsDto): CommentsDocument {
-    const comments = new this();
+  static createInstance(dto: commentsDto): CommentsModel {
+    const comments: CommentsModel = new this();
     comments.content = dto.content;
     comments.postId = dto.postId;
     comments.commentatorInfo = {
@@ -34,12 +36,6 @@ export class Comments {
       dislikesCount: 0,
     }
 
-    return comments as CommentsDocument;
+    return comments;
   }
 }
-
-export const CommentsSchema = SchemaFactory.createForClass(Comments);
-
-CommentsSchema.loadClass(Comments);
-
-export type CommentsDocument = HydratedDocument<Comments>;

@@ -1,52 +1,60 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { Session, SessionDocument } from '../domain/session.entity';
+import { SessionModel } from '../domain/session.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Not, Repository } from 'typeorm';
 
 @Injectable()
-export class SessionRepositories {
-  constructor(@InjectModel(Session.name) private sessionModel: Model<SessionDocument>) {}
+export class SessionRepository {
+  constructor(
+    @InjectRepository(SessionModel)
+    private readonly sessionRepository: Repository<SessionModel>,
+  ) {}
 
-  async createSession(dto: SessionDocument): Promise<boolean> {
-    const session: SessionDocument = new this.sessionModel(dto);
-    await session.save();
+  async createSession(dto: SessionModel): Promise<boolean> {
+    const session: SessionModel = this.sessionRepository.create(dto);
+    await this.sessionRepository.save(session);
     return true;
   }
 
-  async findSessionByDeviceId(deviceId: string): Promise<SessionDocument | null> {
-    return await this.sessionModel.findOne({ deviceId });
+  async findSessionByDeviceId(deviceId: string): Promise<SessionModel | null> {
+    return await this.sessionRepository.findOne({
+      where: { deviceId },
+    });
   }
 
   async updateLastActiveDate(userId: string, deviceId: string, exp: number): Promise<boolean> {
-    const result = await this.sessionModel.updateOne(
-      {userId, deviceId},
+    const result = await this.sessionRepository.update(
+      { userId, deviceId },
       {
-        $set: {
-          lastActiveDate: new Date().toISOString(),
-          expirationDate: new Date(exp * 1000).toISOString(),
-        },
-      }
+        lastActiveDate: new Date().toISOString(),
+        expirationDate: new Date(exp * 1000).toISOString(),
+      },
     );
-    return result.matchedCount === 1;
+
+    return result.affected === 1;
   }
 
-  async getAllSessionsByUser(userId: string) {
-    const findSessions: SessionDocument[] = await this.sessionModel.find({userId: userId})
-
-    return findSessions;
+  async getAllSessionsByUser(userId: string): Promise<SessionModel[]> {
+    return await this.sessionRepository.find({
+      where: { userId },
+    });
   }
 
   async deleteAllSessionsByUserExceptCurrent(userId: string, currentDeviceId: string): Promise<boolean> {
-    const result = await this.sessionModel.deleteMany({
+    const result = await this.sessionRepository.delete({
       userId,
-      deviceId: { $ne: currentDeviceId }
+      deviceId: Not(currentDeviceId),
     });
-    return result.deletedCount > 0;
+
+    return (result.affected ?? 0) > 0;
   }
 
   async deleteSessionByDevice(userId: string, deviceId: string): Promise<boolean> {
-    const deleteSession = await this.sessionModel.deleteOne({userId: userId , deviceId: deviceId})
+    const result = await this.sessionRepository.delete({
+      userId,
+      deviceId,
+    });
 
-    return deleteSession.deletedCount > 0;
+    return (result.affected ?? 0) > 0;
   }
 }

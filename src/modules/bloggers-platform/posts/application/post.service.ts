@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { BlogRepository } from '../../blogs/infrastructure/blog.repository';
 import { PostInputDto } from '../api/dto/input-dto/post.input-dto';
-import { BlogDocument } from '../../blogs/domain/blog.entity';
+import { BlogModel } from '../../blogs/domain/blog.entity';
 import { UpdatePostInputDto } from '../api/dto/input-dto/update-post.input-dto';
 import { PostRepository } from '../infrastructure/post.repository';
-import { Post, PostDocument } from '../domain/post.entity';
+import { PostModel } from '../domain/post.entity';
 import { Types } from 'mongoose';
 import { CustomHttpException, DomainExceptionCode } from '../../../../core/exceptions/domain.exception';
 
@@ -16,10 +16,10 @@ export class PostService {
   ) {}
 
   async createPost(dto: PostInputDto) {
-    const findBlog: BlogDocument | null = await this.blogRepository.findBlogById(dto.blogId);
+    const findBlog: BlogModel | null = await this.blogRepository.findBlogById(dto.blogId);
     if (!findBlog) throw new CustomHttpException(DomainExceptionCode.NOT_FOUND);
 
-    const post: PostDocument = Post.createInstance({
+    const post: PostModel = PostModel.createInstance({
       ...dto,
       blogName: findBlog.name,
     });
@@ -27,7 +27,7 @@ export class PostService {
     return await this.postRepository.save(post);
   }
 
-  async findPostById(id: string): Promise<PostDocument | null> {
+  async findPostById(id: string): Promise<PostModel | null> {
     return await this.postRepository.findPostById(id);
   }
 

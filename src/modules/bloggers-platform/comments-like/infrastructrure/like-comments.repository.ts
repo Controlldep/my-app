@@ -1,27 +1,30 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { LikeComments, LikeCommentsDocument } from '../domain/like-comments.entity';
+import { LikeCommentsModel } from '../domain/like-comments.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class LikeCommentsRepository {
-  constructor(@InjectModel(LikeComments.name) private likeCommentsModel: Model<LikeComments>) {}
+  constructor(
+    @InjectRepository(LikeCommentsModel)
+    private readonly likeCommentsRepository: Repository<LikeCommentsModel>,
+  ) {}
 
-  async save(dto: LikeCommentsDocument): Promise<void> {
-    const result: LikeCommentsDocument = new this.likeCommentsModel(dto);
-    await result.save();
+  async save(dto: LikeCommentsModel): Promise<void> {
+    const likeComment = this.likeCommentsRepository.create(dto);
+    await this.likeCommentsRepository.save(likeComment);
   }
 
-  async checkStatus(id: string | undefined, commentID: string): Promise<LikeCommentsDocument | null> {
-    const checkStatus: LikeCommentsDocument | null = await this.likeCommentsModel.findOneAndUpdate({ userId: id, commentId: commentID });
-    return checkStatus;
+  async checkStatus(userId: string | undefined, commentId: string): Promise<LikeCommentsModel | null> {
+    return await this.likeCommentsRepository.findOne({
+      where: { userId, commentId },
+    });
   }
 
-  async updateStatus(userId: string , commentId: string , status: string): Promise<void> {
-    await this.likeCommentsModel.findOneAndUpdate(
-      { userId: userId, commentId: commentId },
-      { $set: { myStatus: status } },
-      { returnDocument: 'after' }
+  async updateStatus(userId: string, commentId: string, status: 'None' | 'Like' | 'Dislike'): Promise<void> {
+    await this.likeCommentsRepository.update(
+      { userId, commentId },
+      { myStatus: status }
     );
   }
 }

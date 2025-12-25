@@ -1,33 +1,35 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
 import { likeCommentsDto } from './dto/like-comments.dto';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Schema({ timestamps: true })
-export class LikeComments {
-  @Prop({ type: String, required: true })
+export enum LikeStatus {
+  None = 'None',
+  Like = 'Like',
+  Dislike = 'Dislike',
+}
+
+@Entity()
+export class LikeCommentsModel {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ type: 'varchar', length: 255 })
   userId: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar', length: 255 })
   commentId: string;
 
-  @Prop({ type: String, enum: ['None', 'Like', 'Dislike'], default: 'None'})
+  @Column({ type: 'enum', enum: LikeStatus, default: LikeStatus.None })
   myStatus: 'None' | 'Like' | 'Dislike';
 
+  @CreateDateColumn()
   createdAt: Date;
-  updatedAt: Date;
 
-  static createInstance(dto: likeCommentsDto): LikeCommentsDocument {
-    const likeComments = new this();
+  static createInstance(dto: likeCommentsDto): LikeCommentsModel {
+    const likeComments: LikeCommentsModel = new this();
     likeComments.userId = dto.userId;
     likeComments.commentId = dto.commentId;
     likeComments.myStatus = dto.myStatus;
 
-    return likeComments as LikeCommentsDocument;
+    return likeComments;
   }
 }
-
-export const LikeCommentsSchema = SchemaFactory.createForClass(LikeComments);
-
-LikeCommentsSchema.loadClass(LikeComments);
-
-export type LikeCommentsDocument = HydratedDocument<LikeComments>;

@@ -1,8 +1,8 @@
 import { CommentsRepository } from '../../comments/infrastructure/comments.repository';
 import { LikeCommentsRepository } from '../infrastructrure/like-comments.repository';
 import { Injectable } from '@nestjs/common';
-import { CommentsDocument } from '../../comments/domain/comments.entity';
-import { LikeComments, LikeCommentsDocument } from '../domain/like-comments.entity';
+import { CommentsModel } from '../../comments/domain/comments.entity';
+import { LikeCommentsModel } from '../domain/like-comments.entity';
 
 @Injectable()
 export class LikeCommentsService {
@@ -12,7 +12,7 @@ export class LikeCommentsService {
   ) {}
 
   async createLikeForComments(userId: string, commentId: string) {
-    const newLike: LikeCommentsDocument = LikeComments.createInstance({
+    const newLike: LikeCommentsModel = LikeCommentsModel.createInstance({
       userId: userId,
       commentId: commentId,
       myStatus: 'None',
@@ -26,8 +26,8 @@ export class LikeCommentsService {
     return status;
   }
 //TODO придумать как сделать это более красиво
-  async changeStatus(userId: string, comment: CommentsDocument , status: string) {
-    const checkStatus = await this.likeCommentsRepository.checkStatus(userId, comment._id.toString());
+  async changeStatus(userId: string, comment: CommentsModel, status: 'None' | 'Like' | 'Dislike') {
+    const checkStatus = await this.likeCommentsRepository.checkStatus(userId, comment.id.toString());
     if(!checkStatus) return null
     if(checkStatus!.myStatus === status) return null
 
@@ -53,7 +53,7 @@ export class LikeCommentsService {
       comment.likesInfo.dislikesCount += 1;
     }
 
-    await this.likeCommentsRepository.updateStatus(userId, comment._id.toString(), status)
+    await this.likeCommentsRepository.updateStatus(userId, comment.id.toString(), status)
     await this.commentsRepository.updateLikesInfo(comment);
   }
 }

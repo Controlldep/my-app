@@ -1,4 +1,4 @@
-import { PostDocument } from '../../../domain/post.entity';
+import { PostModel } from '../../../domain/post.entity';
 
 export class PostViewDto {
   id: string;
@@ -33,7 +33,7 @@ export class PostViewDto {
   //
   //   return dto;
   // }
-  static mapToView(post: PostDocument, extendedLikesInfo: {
+  static mapToView(post: PostModel, extendedLikesInfo: {
     likesCount: number;
     dislikesCount: number;
     myStatus: string;
@@ -42,7 +42,7 @@ export class PostViewDto {
     const dto = new PostViewDto();
 
     // Маппим основные поля
-    dto.id = post._id.toString();
+    dto.id = post.id.toString();
     dto.title = post.title;
     dto.shortDescription = post.shortDescription;
     dto.content = post.content;

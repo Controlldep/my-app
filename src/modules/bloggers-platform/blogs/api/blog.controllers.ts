@@ -10,7 +10,7 @@ import { GetBlogsQueryInputDto } from './dto/input-dto/get-blogs-query-params.in
 import { PostQueryRepository } from '../../posts/infrastructure/post.query-repository';
 import { GetPostQueryInputDto } from '../../posts/api/dto/input-dto/get-posts-query-params.input-dto';
 import { PostViewDto } from '../../posts/api/dto/view-dto/post.view-dto';
-import { BlogDocument } from '../domain/blog.entity';
+import { BlogModel } from '../domain/blog.entity';
 import { CustomHttpException, DomainExceptionCode } from '../../../../core/exceptions/domain.exception';
 import { BasicAuthGuard } from '../../../user-accounts/guards/basic/basic-auth.guard';
 import { JwtService } from '../../../user-accounts/application/jwt.service';
@@ -31,7 +31,7 @@ export class BlogControllers {
 
   @Get(':id/posts')
   async getAllPostsByBlog(@Query() query: GetPostQueryInputDto, @Param('id') id: string, @Req() req: Request): Promise<PaginatedViewDto<PostViewDto[]>> {
-    const findBlog: BlogDocument | null = await this.blogService.findBlogById(id);
+    const findBlog: BlogModel | null = await this.blogService.findBlogById(id);
     if (!findBlog) throw new CustomHttpException(DomainExceptionCode.NOT_FOUND);
     let userId;
     if(req.headers['authorization']){

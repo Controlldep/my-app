@@ -6,7 +6,7 @@ import { PaginatedViewDto } from '../../../core/dto/base.paginated.view-dto';
 import { SortDirection } from '../../../core/dto/base.query-params.input-dto';
 import { GetUsersQueryParams } from '../api/view-dto/get-users-query-params';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Brackets, FindOptionsWhere, ILike, Repository } from 'typeorm';
 
 @Injectable()
 export class UserQueryRepository {
@@ -25,39 +25,48 @@ export class UserQueryRepository {
   }
 
   async getAllUsers(query: GetUsersQueryParams): Promise<PaginatedViewDto<UserViewDto[]>> {
-    const filter: FilterQuery<UserModel> = {};
+    const qb = this.userRepository.createQueryBuilder('user');
 
-    if (query.searchLoginTerm) {
-      filter.$or = filter.$or || [];
-      filter.$or.push({
-        login: { $regex: query.searchLoginTerm, $options: 'i' },
-      });
+    if (query.searchLoginTerm || query.searchEmailTerm) {
+      qb.where(
+        new Brackets((qb1) => {
+          if (query.searchLoginTerm) {
+            qb1.orWhere('user.login ILIKE :login', {
+              login: `%${query.searchLoginTerm}%`,
+            });
+          }
+          if (query.searchEmailTerm) {
+            qb1.orWhere('user.email ILIKE :email', {
+              email: `%${query.searchEmailTerm}%`,
+            });
+          }
+        }),
+      );
     }
 
-    if (query.searchEmailTerm) {
-      filter.$or = filter.$or || [];
-      filter.$or.push({
-        email: { $regex: query.searchEmailTerm, $options: 'i' },
-      });
+    const sortableFields = ['login', 'email', 'createdAt', 'id', 'isConfirmed'];
+    const sortBy = sortableFields.includes(query.sortBy) ? query.sortBy : 'createdAt';
+    const sortDirection = query.sortDirection === SortDirection.Asc ? 'ASC' : 'DESC';
+
+    if (['login', 'email'].includes(sortBy)) {
+      qb.orderBy(`user.${sortBy} COLLATE "C"`, sortDirection);
+    } else {
+      qb.orderBy(`user.${sortBy}`, sortDirection);
     }
-    const sortDirection = query.sortDirection ?? SortDirection.Desc;
 
-    const users = await this.userRepository.find({
-      where: filter,
-      order: { [query.sortBy]: sortDirection },
-      skip: query.calculateSkip(),
-      take: query.pageSize,
-    });
+    qb.skip(query.calculateSkip()).take(query.pageSize);
 
-    const totalCount = await this.userRepository.count({ where: filter });
+    const [users, totalCount] = await qb.getManyAndCount();
 
     const items = users.map((user) => UserViewDto.mapToView(user));
+    const pagesCount = Math.ceil(totalCount / query.pageSize);
 
-    return PaginatedViewDto.mapToView({
-      items,
-      totalCount,
+    return {
+      pagesCount,
       page: query.pageNumber,
-      size: query.pageSize,
-    });
+      pageSize: query.pageSize,
+      totalCount,
+      items,
+    };
   }
 }

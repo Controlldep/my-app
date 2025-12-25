@@ -1,40 +1,41 @@
 import { Injectable } from '@nestjs/common';
-import { LikePost, LikePostDocument } from '../domain/like-post.entity';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { LikePostModel } from '../domain/like-post.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class LikePostRepositories {
-  constructor(@InjectModel(LikePost.name) private likePostModel: Model<LikePostDocument>) {}
+  constructor(
+    @InjectRepository(LikePostModel)
+    private readonly likePostRepositories: Repository<LikePostModel>,
+  ) {}
 
-  async createLike(dto: LikePostDocument): Promise<string> {
-    const likePost: LikePostDocument = new this.likePostModel(dto);
-    const savedLikePost: LikePostDocument = await likePost.save();
-    return savedLikePost._id.toString();
+  async createLike(dto: LikePostModel): Promise<string> {
+    const likePost = this.likePostRepositories.create(dto);
+    const savedLikePost = await this.likePostRepositories.save(likePost);
+    return savedLikePost.id.toString();
   }
 
-  async checkStatus(userId: string, postId: string): Promise<LikePostDocument | null> {
-    return this.likePostModel.findOne({userId: userId, postId: postId});
+  async checkStatus(userId: string, postId: string): Promise<LikePostModel | null> {
+    return await this.likePostRepositories.findOne({
+      where: { userId, postId },
+    });
   }
 
-  async updateStatus(userId: string, postId: string, status: string) {
-    await this.likePostModel.findOneAndUpdate(
-      { userId: userId, postId: postId},
-      { $set: { myStatus: status } },
-      { returnDocument: 'after' }
+  async updateStatus(userId: string, postId: string, status: 'Like' | 'None' | 'Dislike') {
+    await this.likePostRepositories.update(
+      { userId, postId },
+      { myStatus: status },
     );
   }
 
   async findAllLikesForPost(postId: string) {
-    const result = await this.likePostModel.find({ postId, myStatus: 'Like' })
-      .sort({ addedAt: -1 })
-      .select({
-        addedAt: 1,
-        userId: 1,
-        login: 1,
-        _id: 0 })
-      .limit(3)
-
-    return result
+    const result = await this.likePostRepositories.find({
+      where: { postId, myStatus: 'Like' },
+      order: { addedAt: 'DESC' },
+      select: ['addedAt', 'userId', 'login'],
+      take: 3,
+    });
+    return result;
   }
 }

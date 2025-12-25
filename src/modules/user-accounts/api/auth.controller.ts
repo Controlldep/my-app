@@ -3,7 +3,6 @@ import { UserService } from '../application/user.service';
 import { AuthService } from '../application/auth.service';
 import { JwtService } from '../application/jwt.service';
 import { AuthLoginInputDto } from './input-dto/auth-login.input-dto';
-import { UserDocument } from '../domain/user.entity';
 import type { Request, Response } from 'express';
 import { AuthNewPasswordInputDto } from './input-dto/auth-new-password.input-dto';
 import { AuthPasswordRecoveryInputDto } from './input-dto/auth-password-recovery.input-dto';
@@ -17,14 +16,15 @@ import { CustomHttpException, DomainExceptionCode } from '../../../core/exceptio
 import { SessionService } from '../application/session.service';
 import jwt from 'jsonwebtoken';
 import { getClientIp } from './helpers/get-client-ip.helper';
-import { Session, SessionDocument } from '../domain/session.entity';
+import { SessionModel } from '../domain/session.entity';
 import { RefreshTokenDto } from '../../../core/dto/refresh-token.dto';
-import { RefreshTokenDocument } from '../domain/refresh-token.entity';
+import { RefreshTokenModel } from '../domain/refresh-token.entity';
 import { RefreshTokenService } from '../application/refresh-token.service';
 import { UserOutputDto } from './view-dto/user.output.dto';
 import { RefreshTokenGuard } from '../guards/refresh/refresh-token-auth.guard';
 import { Throttle } from '@nestjs/throttler';
 import { CustomThrottlerGuard } from '../guards/trottler.guard';
+import { UserModel } from '../domain/user.entity';
 
 @Controller('auth')
 export class AuthController {
@@ -41,19 +41,19 @@ export class AuthController {
   @HttpCode(200)
   @Post('login')
   async login(@Body() dto: AuthLoginInputDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    const user: UserDocument | null = await this.authService.login(dto);
+    const user: UserModel | null = await this.authService.login(dto);
     if (!user) throw new CustomHttpException(DomainExceptionCode.UNAUTHORIZED);
 
     const deviceId: string = await this.sessionService.createDeviceID();
-    const refreshToken: string = await this.jwtService.createRefreshToken(user._id.toString(), deviceId);
+    const refreshToken: string = await this.jwtService.createRefreshToken(user.id, deviceId);
     res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true, maxAge: 20000 });
     const ip: string = getClientIp(req);
     const title: string = req.headers['user-agent'] ?? 'Unknown device';
     const decoded: { exp: number } = jwt.decode(refreshToken) as { exp: number };
     const expirationDate: string = new Date(decoded.exp * 1000).toISOString();
 
-    const session: SessionDocument = Session.createInstance({
-      userId: user._id.toString(),
+    const session: SessionModel = SessionModel.createInstance({
+      userId: user.id,
       deviceId: deviceId,
       ip,
       title,
@@ -63,7 +63,7 @@ export class AuthController {
 
     await this.sessionService.saveSession(session);
 
-    const accessToken: { accessToken: string } = await this.jwtService.createAccessToken(user._id.toString());
+    const accessToken: { accessToken: string } = await this.jwtService.createAccessToken(user.id);
     return accessToken;
   }
 
@@ -86,7 +86,7 @@ export class AuthController {
   @HttpCode(204)
   @Post('password-recovery')
   async passwordRecoveryHandler(@Body() dto: AuthPasswordRecoveryInputDto) {
-    const findUserByEmail: UserDocument | null = await this.usersService.findByLoginOrEmail(dto);
+    const findUserByEmail: UserModel | null = await this.usersService.findByLoginOrEmail(dto);
     if(!findUserByEmail) throw new CustomHttpException(DomainExceptionCode.NOT_FOUND)
 
     await this.authService.passwordRecovery(findUserByEmail);
@@ -113,7 +113,7 @@ export class AuthController {
   @UseGuards(CustomThrottlerGuard)
   @Throttle({ default: { limit: 5, ttl: 10_000 } })
   @Post('registration')
-  async registration(@Body() dto: AuthRegistrationInputDto, @Req() req: Request) {
+  async registration(@Body() dto: AuthRegistrationInputDto) {
     await this.authService.registerUser(dto);
   }
 
@@ -128,10 +128,10 @@ export class AuthController {
     if (!verifyToken) throw new CustomHttpException(DomainExceptionCode.UNAUTHORIZED);
     const { userId, jti, deviceId } = verifyToken;
 
-    const findToken: RefreshTokenDocument | null = await this.jwtService.findToken(userId, deviceId, jti);
+    const findToken: RefreshTokenModel | null = await this.jwtService.findToken(userId, deviceId, jti);
     if (!findToken) throw new CustomHttpException(DomainExceptionCode.UNAUTHORIZED);
 
-    const session: SessionDocument | null = await this.sessionService.findSessionByDeviceId(deviceId);
+    const session: SessionModel | null = await this.sessionService.findSessionByDeviceId(deviceId);
     if (!session) throw new CustomHttpException(DomainExceptionCode.NOT_FOUND);
 
     if (session.userId !== userId) throw new CustomHttpException(DomainExceptionCode.FORBIDDEN);
@@ -153,7 +153,7 @@ export class AuthController {
 
     const { userId, jti, deviceId } = verifyToken;
 
-    const token: RefreshTokenDocument | null = await this.jwtService.findToken(userId, deviceId, jti);
+    const token: RefreshTokenModel | null = await this.jwtService.findToken(userId, deviceId, jti);
     if (!token) throw new CustomHttpException(DomainExceptionCode.UNAUTHORIZED);
 
     const createToken: { accessToken: string } = await this.jwtService.createAccessToken(userId);
@@ -162,7 +162,7 @@ export class AuthController {
     const decoded: { exp: number } = jwt.decode(refreshToken!) as { exp: number };
     await this.sessionService.updateLastActiveDate(userId, deviceId, decoded.exp);
 
-    res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true, maxAge: 2000000 });
+    res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true, maxAge: 20000 });
 
     return createToken;
   }

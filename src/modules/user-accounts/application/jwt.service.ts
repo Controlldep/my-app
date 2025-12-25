@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import jwt from 'jsonwebtoken';
 import { settings } from '../../../settings';
-import { RefreshToken, RefreshTokenDocument } from '../domain/refresh-token.entity';
+import { RefreshTokenModel } from '../domain/refresh-token.entity';
 import { RefreshTokenRepositories } from '../infrastructure/refresh-token.repositiry';
 import { add } from 'date-fns';
 import { PasswordHelper } from './helpers/password.helper';
@@ -32,7 +32,7 @@ export class JwtService {
     const jti: string = await PasswordHelper.generateRandomBytes();
     const hashJti: string = await PasswordHelper.hashPassword(jti);
     const refreshToken: string = jwt.sign({ userId, jti, deviceId }, settings.JWT_SECRET_REFRESH, { expiresIn: '20s' });
-    const saveToken: RefreshTokenDocument = RefreshToken.createInstance({
+    const saveToken: RefreshTokenModel = RefreshTokenModel.createInstance({
       userId: userId,
       jtiHash: hashJti,
       deviceId,
@@ -57,8 +57,8 @@ export class JwtService {
     }
   }
 
-  async findToken(userId: string, deviceId: string, jti: string): Promise<RefreshTokenDocument | null> {
-    const session: RefreshTokenDocument | null = await this.refreshTokenRepositories.findTokenByDevice(userId, deviceId);
+  async findToken(userId: string, deviceId: string, jti: string): Promise<RefreshTokenModel | null> {
+    const session: RefreshTokenModel | null = await this.refreshTokenRepositories.findTokenByDevice(userId, deviceId);
     if (!session) throw new CustomHttpException(DomainExceptionCode.UNAUTHORIZED);
 
     const isValid: boolean = await PasswordHelper.comparePassword(jti, session.jtiHash);

@@ -1,26 +1,27 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
 import { LikePostDto } from './dto/like-post.dto';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Schema()
-export class LikePost {
-  @Prop({ type: String, required: true })
+@Entity()
+export class LikePostModel {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ type: 'varchar', length: 255 })
   userId: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar', length: 255 })
   postId: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar', length: 255 })
   login: string;
 
-  @Prop({ type: String, required: true })
+  @Column({ type: 'varchar', length: 255 })
   addedAt: string;
 
-  @Prop({ type: String, enum: ['None', 'Like', 'Dislike'], default: 'None'})
+  @Column({ type: String, enum: ['None', 'Like', 'Dislike'], default: 'None' })
   myStatus: 'None' | 'Like' | 'Dislike';
 
-
-  static createInstance(dto: LikePostDto): LikePostDocument {
+  static createInstance(dto: LikePostDto): LikePostModel {
     const likePost = new this();
     likePost.userId = dto.userId;
     likePost.postId = dto.postId;
@@ -28,12 +29,6 @@ export class LikePost {
     likePost.addedAt = new Date().toISOString();
     likePost.myStatus = dto.myStatus;
 
-    return likePost as LikePostDocument;
+    return likePost;
   }
 }
-
-export const LikePostSchema = SchemaFactory.createForClass(LikePost);
-
-LikePostSchema.loadClass(LikePost);
-
-export type LikePostDocument = HydratedDocument<LikePost>;

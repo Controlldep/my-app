@@ -1,4 +1,4 @@
-import { CommentsDocument } from '../../../domain/comments.entity';
+import { CommentsModel } from '../../../domain/comments.entity';
 
 export class CommentsViewDto {
   id: string;
@@ -14,9 +14,9 @@ export class CommentsViewDto {
     myStatus: string;
   };
 
-  static mapToView(comment: CommentsDocument, myStatus: string = 'None'): CommentsViewDto {
+  static mapToView(comment: CommentsModel, myStatus: string = 'None'): CommentsViewDto {
     const dto: CommentsViewDto = new CommentsViewDto();
-    dto.id = comment._id.toString();
+    dto.id = comment.id.toString();
     dto.content = comment.content;
     dto.commentatorInfo = comment.commentatorInfo;
     dto.createdAt = comment.createdAt.toISOString();
@@ -32,10 +32,10 @@ export class CommentsViewDto {
 
 
 export const mapCommentToViewModel = (
-  comment: CommentsDocument,
+  comment: CommentsModel,
   myStatus: string = "None"
 ): CommentsViewDto => ({
-  id: comment._id.toString(),
+  id: comment.id.toString(),
   content: comment.content,
   commentatorInfo: comment.commentatorInfo,
   createdAt: comment.createdAt.toISOString(),

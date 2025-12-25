@@ -1,13 +1,10 @@
 import { CommentsRepository } from '../infrastructure/comments.repository';
 import { Injectable } from '@nestjs/common';
-import { LikeCommentsRepository } from '../../comments-like/infrastructrure/like-comments.repository';
 import { CustomHttpException, DomainExceptionCode } from '../../../../core/exceptions/domain.exception';
-import { LikeCommentsDocument } from '../../comments-like/domain/like-comments.entity';
-import { Comments, CommentsDocument } from '../domain/comments.entity';
+import { CommentsModel } from '../domain/comments.entity';
 import { UpdateCommentsDto } from '../api/dto/input-dto/update-comments.dto';
-import { CommentsInputDto } from '../../posts/api/dto/input-dto/comments.input.dto';
-import { PostDocument } from '../../posts/domain/post.entity';
-import { UserDocument } from '../../../user-accounts/domain/user.entity';
+import { PostModel } from '../../posts/domain/post.entity';
+import { UserModel } from '../../../user-accounts/domain/user.entity';
 import { UserService } from '../../../user-accounts/application/user.service';
 import { PostService } from '../../posts/application/post.service';
 import { LikeCommentsService } from '../../comments-like/application/like-comments.service';
@@ -22,14 +19,14 @@ export class CommentsService {
   ) {}
 
   async createComment(dto: string, userId: string, id: string): Promise<string | null> {
-    const findPostInDb: PostDocument | null = await this.postService.findPostById(id);
+    const findPostInDb: PostModel | null = await this.postService.findPostById(id);
     if (!findPostInDb) throw new CustomHttpException(DomainExceptionCode.NOT_FOUND);
 
-    const findUserInDb: UserDocument | null = await this.userService.findUserById(userId);
+    const findUserInDb: UserModel | null = await this.userService.findUserById(userId);
     //TODO явно под вопросом 401 или 404
     if (!findUserInDb) throw new CustomHttpException(DomainExceptionCode.UNAUTHORIZED);
 
-    const comment: CommentsDocument = Comments.createInstance({
+    const comment: CommentsModel = CommentsModel.createInstance({
       content: dto,
       postId: id,
       commentatorInfo: {
@@ -53,7 +50,7 @@ export class CommentsService {
     return this.commentsRepository.deleteComment(id);
   }
 
-  async getCommentById(id: string): Promise<CommentsDocument | null> {
+  async getCommentById(id: string): Promise<CommentsModel | null> {
     return this.commentsRepository.getCommentById(id);
   }
 }

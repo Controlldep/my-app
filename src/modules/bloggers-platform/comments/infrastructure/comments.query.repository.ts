@@ -1,32 +1,35 @@
 import { Injectable } from '@nestjs/common';
 import { CustomHttpException, DomainExceptionCode } from '../../../../core/exceptions/domain.exception';
-import { LikeCommentsRepository } from '../../comments-like/infrastructrure/like-comments.repository';
-import { Comments, CommentsDocument } from '../domain/comments.entity';
-import { CommentsRepository } from './comments.repository';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { LikeComments, LikeCommentsDocument } from '../../comments-like/domain/like-comments.entity';
+import { CommentsModel } from '../domain/comments.entity';
+import { LikeCommentsModel } from '../../comments-like/domain/like-comments.entity';
 import { CommentsViewDto } from '../api/dto/output-dto/comments.view.dto';
 import { GetCommentsQueryInputDto } from '../api/dto/input-dto/get-comments-query.input.dto';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { In, Repository } from 'typeorm';
 
 @Injectable()
 export class CommentsQueryRepository {
   constructor(
-    private readonly likeCommentsRepository: LikeCommentsRepository,
-    private readonly commentsRepository: CommentsRepository,
-    @InjectModel(Comments.name) private commentsModel: Model<CommentsDocument>,
-    @InjectModel(LikeComments.name) private likeCommentsModel: Model<LikeCommentsDocument>,
+    @InjectRepository(CommentsModel)
+    private readonly commentsRepository: Repository<CommentsModel>,
+    @InjectRepository(LikeCommentsModel)
+    private readonly likeCommentsRepository: Repository<LikeCommentsModel>,
   ) {}
-  async getCommentsById(id: string, userId: string | undefined) {
-    const dbComment: CommentsDocument | null = await this.commentsRepository.getCommentById(id);
+  async getCommentsById(id: string, userId?: string) {
+    const dbComment = await this.commentsRepository.findOne({ where: { id } });
     if (!dbComment) throw new CustomHttpException(DomainExceptionCode.NOT_FOUND);
 
-    let likeStatus = await this.likeCommentsRepository.checkStatus(userId, dbComment._id.toString());
+    const likeStatus = userId
+      ? await this.likeCommentsRepository.findOne({
+        where: { commentId: dbComment.id, userId },
+      })
+      : null;
+
     const myStatus = likeStatus ? likeStatus.myStatus : 'None';
 
-    const doc = {
-      id: dbComment._id.toString(),
+    return {
+      id: dbComment.id,
       content: dbComment.content,
       commentatorInfo: dbComment.commentatorInfo,
       createdAt: dbComment.createdAt,
@@ -34,35 +37,33 @@ export class CommentsQueryRepository {
         likesCount: dbComment.likesInfo.likesCount,
         dislikesCount: dbComment.likesInfo.dislikesCount,
         myStatus,
-      }
-    }
-    return doc;
+      },
+    };
   }
 
-  async getAllCommentsForPost(pagination: GetCommentsQueryInputDto, postId: string, userId?: string | null):Promise<PaginatedViewDto<CommentsViewDto[]>> {
-    const filter: { postId: string } = { postId };
-    const totalCount: number = await this.commentsModel.countDocuments(filter);
+  async getAllCommentsForPost(
+    pagination: GetCommentsQueryInputDto,
+    postId: string,
+    userId?: string,
+  ): Promise<PaginatedViewDto<CommentsViewDto[]>> {
+    const [items, totalCount] = await this.commentsRepository.findAndCount({
+      where: { postId },
+      order: { createdAt: pagination.sortDirection },
+      skip: (pagination.pageNumber - 1) * pagination.pageSize,
+      take: pagination.pageSize,
+    });
 
-    const items: CommentsDocument[] = await this.commentsModel
-      .find(filter)
-      .sort({ createdAt: pagination.sortDirection })
-      .skip((pagination.pageNumber - 1) * pagination.pageSize)
-      .limit(pagination.pageSize);
-
-    let userLikes: LikeComments[] = [];
-
+    let userLikes: LikeCommentsModel[] = [];
     if (userId) {
-      const commentIds = items.map(c => c._id.toString());
-      userLikes = await this.likeCommentsModel.find({
-        userId,
-        commentId: { $in: commentIds },
+      const commentIds = items.map(c => c.id);
+      userLikes = await this.likeCommentsRepository.find({
+        where: { commentId: In(commentIds), userId },
       });
     }
 
-    const mappedItems: CommentsViewDto[] = items.map(comment => {
-      const userLike = userLikes.find(like => like.commentId === comment._id.toString());
-      const myStatus = userLike ? userLike.myStatus : "None";
-
+    const mappedItems = items.map(comment => {
+      const userLike = userLikes.find(like => like.commentId === comment.id);
+      const myStatus = userLike ? userLike.myStatus : 'None';
       return CommentsViewDto.mapToView(comment, myStatus);
     });
 

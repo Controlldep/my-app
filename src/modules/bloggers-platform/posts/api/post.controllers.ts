@@ -13,16 +13,16 @@ import { UserIdDto } from '../../../user-accounts/guards/dto/user-id.dto';
 import { CommentsQueryRepository } from '../../comments/infrastructure/comments.query.repository';
 import { CommentsService } from '../../comments/application/comments.service';
 import { CustomHttpException, DomainExceptionCode } from '../../../../core/exceptions/domain.exception';
-import { PostDocument } from '../domain/post.entity';
+import { PostModel } from '../domain/post.entity';
 import { JwtService } from '../../../user-accounts/application/jwt.service';
 import { GetCommentsQueryInputDto } from '../../comments/api/dto/input-dto/get-comments-query.input.dto';
 import { CommentsViewDto } from '../../comments/api/dto/output-dto/comments.view.dto';
 import { JwtAuthGuard } from '../../../user-accounts/guards/jwt/jwt-auth.guard';
 import { UpdateLikeStatusDto } from '../../comments/api/dto/input-dto/update-like-status.dto';
-import { UserDocument } from '../../../user-accounts/domain/user.entity';
+import { UserModel } from '../../../user-accounts/domain/user.entity';
 import { LikePostService } from '../../post-likes/application/like-post.service';
 import { UserService } from '../../../user-accounts/application/user.service';
-import { LikePostDocument } from '../../post-likes/domain/like-post.entity';
+import { LikePostModel } from '../../post-likes/domain/like-post.entity';
 
 @Controller('posts')
 export class PostControllers {
@@ -73,7 +73,7 @@ export class PostControllers {
   //TODO было бы логично создать прослойку и добавить сервис для этого эндпоинта дабы убрать вот эту расшифровку в контроллере
   @Get(':id/comments')
   async getCommentsByPostHandler(@Param('id') id: string, @Req() req: Request, @Query() query: GetCommentsQueryInputDto): Promise<PaginatedViewDto<CommentsViewDto[]>> {
-    const findPostInDb: PostDocument | null = await this.postService.findPostById(id);
+    const findPostInDb: PostModel | null = await this.postService.findPostById(id);
     if (!findPostInDb) throw new CustomHttpException(DomainExceptionCode.NOT_FOUND);
 
     const token = req.headers['authorization']?.split(" ")[1];
@@ -98,12 +98,12 @@ export class PostControllers {
       ]);
     }
     //Todo в сервисы унести
-    const findPost: PostDocument | null = await this.postService.findPostById(id);
+    const findPost: PostModel | null = await this.postService.findPostById(id);
     if (!findPost) throw new CustomHttpException(DomainExceptionCode.NOT_FOUND);
 
-    const findUser: UserDocument | null = await this.userService.findUserById(userId);
+    const findUser: UserModel | null = await this.userService.findUserById(userId);
 
-    const findUserLikeSchema: LikePostDocument | null = await this.likePostService.checkStatus(userId, findPost._id.toString());
+    const findUserLikeSchema: LikePostModel | null = await this.likePostService.checkStatus(userId, findPost.id.toString());
 
     if(!findUserLikeSchema) {
       await this.likePostService.createPostLike(userId, findPost, findUser!.login);
